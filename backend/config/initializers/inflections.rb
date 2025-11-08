@@ -14,3 +14,9 @@
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym "RESTful"
 # end
+
+# Register common acronyms so constants like `JWTBlacklist` map correctly
+# to `jwt_blacklist.rb` under Zeitwerk/Rails autoloading.
+ActiveSupport::Inflector.inflections(:en) do |inflect|
+  inflect.acronym "JWT"
+end
