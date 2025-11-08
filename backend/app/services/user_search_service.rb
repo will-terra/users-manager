@@ -22,14 +22,14 @@ class UserSearchService
     @scope.where(role: @params[:role])
   end
 
-  def filter_by_search
+    def filter_by_search
     # Case-insensitive match on full_name or email using ILIKE
     return @scope unless @params[:search].present?
 
-    search_term = "%#{@params[:search]}%"
+    # Use left-anchored search for more precise matching
+    search_term = "#{@params[:search]}%"
     @scope.where("full_name ILIKE ? OR email ILIKE ?", search_term, search_term)
   end
-
   def filter_by_date_range
     # Restrict by created_at between optional start_date and end_date (inclusive)
     return @scope unless @params[:start_date].present? || @params[:end_date].present?

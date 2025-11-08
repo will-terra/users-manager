@@ -44,15 +44,15 @@ RSpec.describe 'Api::V1::Admin::Users', type: :request do
       end
 
       it 'searches users by name or email' do
-        user = create(:user, full_name: 'John Doe', email: 'john@example.com')
+        user = create(:user, full_name: 'Zebediah Xylophones', email: 'zebediah.unique@example.com')
 
         get '/api/v1/admin/users',
-            params: { search: 'John' },
+            params: { search: 'Zebediah' },
             headers: { 'Authorization' => admin_token }
 
         json_response = JSON.parse(response.body)
         expect(json_response['users']['data'].count).to eq(1)
-        expect(json_response['users']['data'][0]['attributes']['full_name']).to eq('John Doe')
+        expect(json_response['users']['data'][0]['attributes']['full_name']).to eq('Zebediah Xylophones')
       end
     end
 

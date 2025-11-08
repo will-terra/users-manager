@@ -2,7 +2,10 @@ Rails.application.routes.draw do
   devise_for :users # Devise authentication endpoints
 
   # Simple health check for uptime monitoring
-  get "up" => "rails/health#show", as: :rails_health_check
+  get "/up", to: "up#index"
+
+  # Mount Action Cable
+  mount ActionCable.server => "/cable"
 
   namespace :api do
     namespace :v1 do
