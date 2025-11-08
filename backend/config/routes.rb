@@ -26,6 +26,7 @@ Rails.application.routes.draw do
 
       # Administrative endpoints
       namespace :admin do
+        resources :imports, only: [ :index, :show, :create ]
         resources :users, only: [ :index, :show, :create, :update, :destroy ] do
           member do
             patch :toggle_role # Admin toggles another user's role

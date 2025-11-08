@@ -28,6 +28,10 @@ class UserPolicy < ApplicationPolicy
     user.admin? # Determines if admin-only params are permitted
   end
 
+  def admin?
+    user.admin? # Check if user has admin privileges
+  end
+
   class Scope < Scope
     def resolve
       if user.admin?
