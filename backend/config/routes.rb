@@ -1,51 +1,38 @@
 Rails.application.routes.draw do
-  devise_for :users
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  devise_for :users # Devise authentication endpoints
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  # Simple health check for uptime monitoring
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Defines the root path route ("/")
-  # root "posts#index"
-
-  # API namespace (versioned)
-  # We expose a JSON API under /api/v1. Versioning allows us to introduce
-  # breaking changes in the future without disrupting existing clients.
   namespace :api do
     namespace :v1 do
-      # Authentication routes (public)
-      # - POST /api/v1/sign_in  => sessions#create  (login, returns JWT)
-      # - DELETE /api/v1/sign_out => sessions#destroy (logout — client should drop token)
-      # - POST /api/v1/sign_up  => registrations#create (create account and return token)
-      post "sign_in", to: "sessions#create"
+      # Authentication endpoints (JWT sessions & registration)
+      post "sign_in",  to: "sessions#create"
       delete "sign_out", to: "sessions#destroy"
-      post "sign_up", to: "registrations#create"
+      post "sign_up",  to: "registrations#create"
 
-      # User management endpoints (protected by authentication middleware)
-      # - index/show/update/destroy for allowed operations
-      # - member route `toggle_role` for changing a user's role (admin-only in policy)
-      # - collection route `profile` to fetch the current user's profile
+      # Regular user-facing operations
       resources :users, only: [ :index, :show, :update, :destroy ] do
         member do
-          patch :toggle_role
+          patch :toggle_role # Allow role toggle (may be restricted by policy)
         end
         collection do
-          get :profile
+          get :profile # Current user profile summary
         end
       end
 
-      # Admin namespace for admin-specific operations. Controllers here
-      # should enforce admin-only access via policies or before_actions.
+      # Administrative endpoints
       namespace :admin do
-        # Typical CRUD for user management by admins
-        resources :users, only: [ :index, :show, :create, :update, :destroy ]
-
-        # Admin-level statistics endpoint
-        get "stats", to: "stats#index"
-
-        # Import-related endpoints (e.g., CSV imports)
-        resources :imports, only: [ :create, :index, :show ]
+        resources :users, only: [ :index, :show, :create, :update, :destroy ] do
+          member do
+            patch :toggle_role # Admin toggles another user's role
+          end
+          collection do
+            get :overview # Aggregated overview of users
+          end
+        end
+        get "stats", to: "stats#index" # System or usage statistics
+        resources :imports, only: [ :create, :index, :show ] # Data import jobs
       end
     end
   end

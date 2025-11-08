@@ -43,7 +43,7 @@ module Api
         if @user.update(user_params)
           render json: UserSerializer.new(@user).serializable_hash
         else
-          render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
+          render json: { errors: @user.errors.full_messages }, status: :unprocessable_content
         end
       end
 
@@ -66,7 +66,7 @@ module Api
         if @user.update(role: new_role)
           render json: UserSerializer.new(@user).serializable_hash
         else
-          render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
+          render json: { errors: @user.errors.full_messages }, status: :unprocessable_content
         end
       end
 
