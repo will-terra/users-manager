@@ -45,7 +45,8 @@ gem "pundit"
 
 
 # API documentation and serialization
-gem "fast_jsonapi"
+# Use a maintained JSON:API serializer that exposes `JSONAPI::Serializer`
+gem "jsonapi-serializer"
 
 # Security
 gem "rack-attack"

@@ -40,7 +40,6 @@ RSpec.describe User, type: :model do
         filename: 'large_image.jpg',
         content_type: 'image/jpeg'
       )
-      # Assumindo que large_image.jpg é maior que 5MB
       expect(user).not_to be_valid
       expect(user.errors[:avatar]).to include('should be less than 5MB')
     end
@@ -76,7 +75,7 @@ RSpec.describe User, type: :model do
       user.save
       token = user.generate_jwt
       expect(token).to be_a(String)
-      expect(token.split('.').length).to eq(3) # JWT tem 3 partes
+      expect(token.split('.').length).to eq(3)
     end
   end
 

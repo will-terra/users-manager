@@ -39,6 +39,11 @@ Rails.application.configure do
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "example.com" }
 
+  # Allow test requests from the common test host used by Rails/RSpec
+  # (some test helpers and tools use `www.example.com`). This avoids
+  # ActionDispatch::HostAuthorization blocking requests during request specs.
+  config.hosts << "www.example.com"
+
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr
 
