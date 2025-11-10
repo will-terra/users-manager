@@ -6,7 +6,7 @@ RSpec.describe ImportBroadcastService, type: :service do
       import = build(:user_import)
       import.save(validate: false) # Save without triggering validations or callbacks
       import.reload
-      
+
       expect(ActionCable.server).to receive(:broadcast).with(
         'admin_imports',
         hash_including(type: 'import_created')

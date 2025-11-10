@@ -31,7 +31,7 @@ RSpec.describe User, type: :model do
         content_type: 'text/plain'
       )
       expect(user).not_to be_valid
-      expect(user.errors[:avatar]).to include('must be a JPEG, PNG, or GIF image')
+      expect(user.errors[:avatar]).to include('must be one of: image/jpeg, image/png, image/gif, image/webp')
     end
 
     it 'validates file size' do
@@ -41,7 +41,7 @@ RSpec.describe User, type: :model do
         content_type: 'image/jpeg'
       )
       expect(user).not_to be_valid
-      expect(user.errors[:avatar]).to include('should be less than 5MB')
+      expect(user.errors[:avatar]).to include('must be less than 5MB')
     end
 
     it 'accepts valid avatar' do

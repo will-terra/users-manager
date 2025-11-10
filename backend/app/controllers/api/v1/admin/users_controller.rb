@@ -112,7 +112,7 @@ module Api
         def admin_user_params
           params.require(:user).permit(
             :full_name, :email, :role, :password, :password_confirmation,
-            :avatar, :avatar_url
+            :avatar, :avatar_url, :remove_avatar
           )
         end
 

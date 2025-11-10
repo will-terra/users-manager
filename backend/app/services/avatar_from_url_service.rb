@@ -7,14 +7,14 @@
 # Notes / behavior:
 # - If `url` is blank, the service is a no-op.
 # - The remote resource is fetched via Net::HTTP. Only successful
-#   HTTP responses (2xx) will be written to a tempfile and attached.
-# - The downloaded file is written to a Tempfile (binary mode),
-#   attached via `user.avatar.attach`, then the tempfile is closed
-#   and unlinked to avoid leaving temporary files on disk.
-# - Any exception during download/attach is caught and logged. The
-#   service does not raise so callers can use it safely in background
-#   jobs or controllers without crashing the request flow.
+#   HTTP responses (2xx) will be written and attached.
+# - Validates URL scheme, file extension, content type, and file size.
+# - Any exception during download/attach is caught, logged, and added
+#   to user errors. The service does not raise so callers can use it
+#   safely in background jobs or controllers.
 class AvatarFromUrlService
+  class AvatarDownloadError < StandardError; end
+
   # Initialize with the user (model instance that responds to `avatar`)
   # and the remote URL to download (string).
   def initialize(user, url)
@@ -23,43 +23,93 @@ class AvatarFromUrlService
   end
 
   # Perform the download and attach. Returns truthy when attachment
-  # happened (response was successful), otherwise nil/false.
+  # happened (response was successful), otherwise false.
   def call
-    # No-op if url is blank or nil
-    return unless @url.present?
+    return if @url.blank?
 
     begin
-      # Parse the URL and perform an HTTP GET
       uri = URI.parse(@url)
-      response = Net::HTTP.get_response(uri)
 
-      # Only proceed on successful responses (HTTP 2xx)
-      if response.is_a?(Net::HTTPSuccess)
-        # Create a tempfile with the same extension as the remote path
-        file = Tempfile.new([ "avatar", File.extname(uri.path) ])
-        file.binmode
-        file.write(response.body)
-        file.rewind
+      # Validate URL
+      validate_url(uri)
 
-        # Attach to the user's avatar (ActiveStorage). We provide the
-        # IO, a filename, and the content type from the response so
-        # ActiveStorage stores metadata properly.
-        @user.avatar.attach(
-          io: file,
-          filename: File.basename(uri.path),
-          content_type: response.content_type
-        )
+      # Download file
+      file_data = download_file(uri)
 
-        # Clean up the tempfile: close and unlink removes it from disk
-        file.close
-        file.unlink
-        true
-      end
+      # Validate file
+      validate_file(file_data)
+
+      # Attach to user
+      attach_file(file_data)
+
     rescue => e
-      # Log the error for diagnostics but don't re-raise so callers can
-      # continue (e.g., background job should not crash the whole run).
-      Rails.logger.error "Error downloading avatar from URL: #{e.message}"
-      nil
+      Rails.logger.error "AvatarFromUrlService Error: #{e.message}"
+      @user.errors.add(:avatar_url, "could not be processed: #{e.message}")
+      false
     end
+  end
+
+  private
+
+  def validate_url(uri)
+    unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
+      raise AvatarDownloadError, "Invalid URL scheme"
+    end
+
+    # Check if it's an image URL
+    unless uri.path.downcase.match?(/\.(jpg|jpeg|png|gif|webp)$/i)
+      raise AvatarDownloadError, "URL must point to an image file (JPG, PNG, GIF, WebP)"
+    end
+  end
+
+  def download_file(uri)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = uri.scheme == "https"
+    http.open_timeout = 10
+    http.read_timeout = 10
+
+    request = Net::HTTP::Get.new(uri)
+    request["User-Agent"] = "UserManager App"
+
+    response = http.request(request)
+
+    unless response.is_a?(Net::HTTPSuccess)
+      raise AvatarDownloadError, "HTTP Error: #{response.code} #{response.message}"
+    end
+
+    content_type = response.content_type
+    unless content_type.start_with?("image/")
+      raise AvatarDownloadError, "Content is not an image: #{content_type}"
+    end
+
+    {
+      io: StringIO.new(response.body),
+      filename: File.basename(uri.path) || "avatar#{File.extname(uri.path) || '.jpg'}",
+      content_type: content_type
+    }
+  end
+
+  def validate_file(file_data)
+    # Check file size
+    file_data[:io].rewind
+    content = file_data[:io].read
+    file_data[:io].rewind
+
+    if content.bytesize > 5.megabytes
+      raise AvatarDownloadError, "Image is too large (max 5MB)"
+    end
+
+    # Check if it's really an image
+    unless file_data[:content_type].start_with?("image/")
+      raise AvatarDownloadError, "File is not a valid image"
+    end
+  end
+
+  def attach_file(file_data)
+    @user.avatar.attach(
+      io: file_data[:io],
+      filename: file_data[:filename],
+      content_type: file_data[:content_type]
+    )
   end
 end

@@ -80,8 +80,9 @@ module Api
       # Strong parameters for updates. Only allow attributes that should be
       # mutable by API clients. `avatar` expects an uploaded file; `avatar_url`
       # can be used by clients to point to remote avatars if supported.
+      # `remove_avatar` can be set to '1' to remove the user's avatar.
       def user_params
-        params.require(:user).permit(:full_name, :email, :avatar, :avatar_url)
+        params.require(:user).permit(:full_name, :email, :avatar, :avatar_url, :remove_avatar)
       end
     end
   end

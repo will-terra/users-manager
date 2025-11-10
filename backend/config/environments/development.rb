@@ -26,8 +26,10 @@ Rails.application.configure do
   # Change to :null_store to avoid any caching.
   config.cache_store = :memory_store
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
+  # Active Storage configuration
+  config.active_storage.variant_processor = :vips
   config.active_storage.service = :local
+  config.active_storage.resolve_model_to_route = :rails_storage_proxy
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
