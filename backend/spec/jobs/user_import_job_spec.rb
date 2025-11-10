@@ -36,4 +36,43 @@ RSpec.describe UserImportJob, type: :job do
     expect(user_import.status).to eq('failed')
     expect(user_import.error_message).to eq('Test error')
   end
+
+  describe 'broadcasting' do
+    let(:file) { fixture_file_upload('spec/fixtures/files/users.csv', 'text/csv') }
+
+    before do
+      user_import.file.attach(file)
+      user_import.save!
+    end
+
+    it 'broadcasts import started' do
+      expect do
+        UserImportJob.perform_now(user_import.id)
+      end.to have_broadcasted_to("import_#{user_import.id}").with(
+        hash_including(type: 'import_started')
+      )
+    end
+
+    it 'broadcasts progress updates' do
+      expect do
+        UserImportJob.perform_now(user_import.id)
+      end.to have_broadcasted_to("import_#{user_import.id}").with(
+        hash_including(type: 'progress_update')
+      ).at_least(:once)
+    end
+
+    it 'broadcasts import completed' do
+      expect do
+        UserImportJob.perform_now(user_import.id)
+      end.to have_broadcasted_to("import_#{user_import.id}").with(
+        hash_including(type: 'import_completed')
+      )
+    end
+
+    it 'broadcasts to admin channel as well' do
+      expect do
+        UserImportJob.perform_now(user_import.id)
+      end.to have_broadcasted_to("admin_imports").at_least(:once)
+    end
+  end
 end

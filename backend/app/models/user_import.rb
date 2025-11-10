@@ -15,6 +15,10 @@ class UserImport < ApplicationRecord
   validate :file_presence, unless: :skip_file_validation
   validate :file_content_type
 
+  # Broadcast events on creation and updates
+  after_create :broadcast_import_created
+  after_update :broadcast_import_updated, if: -> { saved_change_to_status? || saved_change_to_progress? }
+
   # Updates the progress counter for the import operation
   def update_progress(processed, total = nil)
     update(
@@ -58,5 +62,15 @@ class UserImport < ApplicationRecord
     unless file.content_type.in?(%w[text/csv application/vnd.ms-excel application/vnd.openxmlformats-officedocument.spreadsheetml.sheet])
       errors.add(:file, "must be a CSV or Excel file")
     end
+  end
+
+  # Broadcast import creation event to subscribers
+  def broadcast_import_created
+    ImportBroadcastService.broadcast_import_created(self)
+  end
+
+  # Broadcast import update event to subscribers
+  def broadcast_import_updated
+    ImportBroadcastService.broadcast_import_list_update
   end
 end

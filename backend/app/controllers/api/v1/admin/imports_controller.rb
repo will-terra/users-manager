@@ -31,13 +31,11 @@ module Api
           file_url = params.dig(:import, :file_url)
           user_import = UserImport.new(import_params.except(:file_url))
           user_import.user = current_user
-
+          
           # Skip file validation if we're downloading from URL
           user_import.skip_file_validation = file_url.present?
 
           if user_import.save
-            # If file_url provided, download first then process
-            # Otherwise, process uploaded file directly
             if file_url.present?
               download_and_process_file(user_import, file_url)
             else
