@@ -3,7 +3,7 @@ module Api
     module Admin
       # Controller to manage user import operations (CSV/file uploads)
       # Restricted to admin users only
-      class ImportsController < ApplicationController
+      class ImportsController < BaseController
         before_action :authorize_admin
 
         # GET /api/v1/admin/imports
@@ -52,7 +52,11 @@ module Api
 
         # Verify current user has admin privileges
         def authorize_admin
-          authorize User, :admin?
+          begin
+            authorize User, :admin?
+          rescue Pundit::NotAuthorizedError
+            head :forbidden
+          end
         end
 
         # Strong parameters for import creation

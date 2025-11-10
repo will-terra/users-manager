@@ -6,6 +6,7 @@ abort("The Rails environment is running in production mode!") if Rails.env.produ
 
 require 'rspec/rails'
 require 'shoulda/matchers'
+require 'pundit/matchers'
 
 # Configure shoulda-matchers to use RSpec and Rails
 Shoulda::Matchers.configure do |config|
@@ -24,6 +25,7 @@ require 'factory_bot_rails' if defined?(FactoryBot)
 RSpec.configure do |config|
   # Include FactoryBot syntax methods
   config.include FactoryBot::Syntax::Methods if defined?(FactoryBot)
+  config.include Pundit::Matchers if defined?(Pundit::Matchers)
 
   # Use transactional fixtures
   config.use_transactional_fixtures = true

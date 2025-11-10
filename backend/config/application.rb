@@ -41,6 +41,9 @@ module Backend
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
+    # Configure custom exception handling using routes
+    config.exceptions_app = self.routes
+
     # Configure Solid Cache as cache store
     config.cache_store = :solid_cache_store
 
@@ -52,6 +55,10 @@ module Backend
 
     # Active Storage configuration
     config.active_storage.variant_processor = :vips
-  config.active_storage.content_types_to_serve_as_binary -= [ "image/svg+xml" ]
+    config.active_storage.content_types_to_serve_as_binary -= [ "image/svg+xml" ]
+
+    # Logging configuration
+    config.log_level = :info
+    config.log_tags = [ :request_id ]
   end
 end

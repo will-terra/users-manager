@@ -6,9 +6,12 @@ module Api
     # - List, show, update and destroy users (actions protected by Pundit)
     # - Provide a `profile` endpoint that returns the current user's data
     # - Allow role toggling via `toggle_role` (authorization checked separately)
-    class UsersController < ApplicationController
+    class UsersController < BaseController
       # Load the target user for actions that operate on a specific record
       before_action :set_user, only: [ :show, :update, :destroy, :toggle_role ]
+
+      # Ensure user is authenticated before accessing any action
+      before_action :require_authentication!
 
       # GET /api/v1/users
       # Requires authorization; returns a collection scoped by Pundit policies
@@ -28,12 +31,10 @@ module Api
       # GET /api/v1/users/profile
       # Convenience endpoint that returns the currently authenticated user's data
       def profile
-          # Authorize the current user using the existing `show?` policy method
-          # (Pundit will call `UserPolicy#show?`). This satisfies the
-          # `verify_authorized` after_action check without needing a custom
-          # `profile?` policy method.
-          authorize current_user, :show?
-          render json: UserSerializer.new(current_user).serializable_hash
+        # This action requires authentication (already enforced by before_action)
+        # Authorize using UserPolicy#profile? which always returns true for authenticated users
+        authorize current_user, :profile?
+        render json: UserSerializer.new(current_user).serializable_hash
       end
 
       # PATCH/PUT /api/v1/users/:id
@@ -43,7 +44,7 @@ module Api
         if @user.update(user_params)
           render json: UserSerializer.new(@user).serializable_hash
         else
-          render json: { errors: @user.errors.full_messages }, status: :unprocessable_content
+          render_validation_errors(@user)
         end
       end
 

@@ -5,16 +5,11 @@ module Api
     # - `create` authenticates a user and returns a JWT token plus basic user
     #   attributes on success.
     # - `destroy` is a no-op for stateless JWTs (clients discard the token).
-    class SessionsController < ApplicationController
-      # Skip Pundit authorization checks since these endpoints don't call
-      # `authorize` or `policy_scope`. Login/logout are public actions that
-      # don't need Pundit verification.
-      skip_before_action :verify_authorized, raise: false
-      skip_before_action :verify_policy_scoped, raise: false
-      before_action :pundit_skip!
-
+    class SessionsController < BaseController
       # Allow unauthenticated access to login
-      skip_before_action :authenticate_user!, only: [ :create ]
+      skip_before_action :authenticate_user_from_token!, only: [ :create ]
+
+      before_action :pundit_skip!
 
       # POST /api/v1/sessions
       # Params: { user: { email: string, password: string } }
@@ -26,14 +21,17 @@ module Api
         # Verify password and, if valid, issue a JWT for client use
         if user&.valid_password?(session_params[:password])
           token = user.generate_jwt
-          render json: {
-            user: UserSerializer.new(user).serializable_hash[:data][:attributes],
-            token: token,
-            redirect_to: redirect_path(user)
-          }, status: :created
+          render_success(
+            {
+              user: user_serialized(user),
+              token: token,
+              redirect_to: redirect_path(user)
+            },
+            status: :created
+          )
         else
           # Generic error to avoid leaking whether email exists
-          render json: { errors: [ "Invalid email or password" ] }, status: :unauthorized
+          render_error("Invalid email or password", status: :unauthorized)
         end
       end
 
@@ -43,7 +41,8 @@ module Api
       # invalidation (a token blacklist), implement that logic here (e.g.
       # create a blacklist record for the token or its jti claim).
       def destroy
-        head :no_content
+        # JWT logout is handled client-side by discarding the token
+        render_success(nil, status: :no_content)
       end
 
       private
@@ -57,6 +56,11 @@ module Api
       # JSON response so the frontend can navigate appropriately after login.
       def redirect_path(user)
         user.admin? ? "/admin/dashboard" : "/profile"
+      end
+
+      # Serialize user data for the response
+      def user_serialized(user)
+        UserSerializer.new(user).serializable_hash[:data][:attributes]
       end
     end
   end

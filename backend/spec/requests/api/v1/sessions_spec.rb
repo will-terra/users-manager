@@ -13,9 +13,10 @@ RSpec.describe 'Api::V1::Sessions', type: :request do
 
         expect(response).to have_http_status(:created)
         json_response = JSON.parse(response.body)
-        expect(json_response['user']['email']).to eq(user.email)
-        expect(json_response['token']).to be_present
-        expect(json_response['redirect_to']).to eq('/profile')
+        expect(json_response['success']).to be true
+        expect(json_response['data']['user']['email']).to eq(user.email)
+        expect(json_response['data']['token']).to be_present
+        expect(json_response['data']['redirect_to']).to eq('/profile')
       end
 
       it 'returns admin redirect for admin user' do
@@ -25,7 +26,8 @@ RSpec.describe 'Api::V1::Sessions', type: :request do
 
         expect(response).to have_http_status(:created)
         json_response = JSON.parse(response.body)
-        expect(json_response['redirect_to']).to eq('/admin/dashboard')
+        expect(json_response['success']).to be true
+        expect(json_response['data']['redirect_to']).to eq('/admin/dashboard')
       end
     end
 
@@ -36,7 +38,9 @@ RSpec.describe 'Api::V1::Sessions', type: :request do
         }
 
         expect(response).to have_http_status(:unauthorized)
-        expect(JSON.parse(response.body)['errors']).to include('Invalid email or password')
+        json_response = JSON.parse(response.body)
+        expect(json_response['success']).to be false
+        expect(json_response['error']['message']).to eq('Invalid email or password')
       end
     end
   end

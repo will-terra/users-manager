@@ -5,15 +5,11 @@ module Api
     # - `create` registers a new user, assigns a default role, issues a JWT,
     #   and returns the serialized user plus token on success.
     # - Uses strong parameters to permit only the expected attributes.
-    class RegistrationsController < ApplicationController
-      # Skip Pundit authorization checks since registration is a public,
-      # unauthenticated endpoint that doesn't call `authorize` or `policy_scope`.
-      skip_before_action :verify_authorized, raise: false
-      skip_before_action :verify_policy_scoped, raise: false
-      before_action :pundit_skip!
-
+    class RegistrationsController < BaseController
       # Allow unauthenticated access to registration
-      skip_before_action :authenticate_user!, only: [ :create ]
+      skip_before_action :authenticate_user_from_token!, only: [ :create ]
+
+      before_action :pundit_skip!
 
       # POST /api/v1/registrations
       # Params: { user: { full_name, email, password, password_confirmation } }
@@ -27,7 +23,7 @@ module Api
           # Issue a JWT for the newly created user so the client can authenticate
           token = user.generate_jwt
           render json: {
-            user: UserSerializer.new(user).serializable_hash[:data][:attributes],
+            user: user_serialized(user),
             token: token,
             redirect_to: "/profile"
           }, status: :created
@@ -42,6 +38,11 @@ module Api
       # Strong parameters for registration
       def registration_params
         params.require(:user).permit(:full_name, :email, :password, :password_confirmation)
+      end
+
+      # Serialize user data for the response
+      def user_serialized(user)
+        UserSerializer.new(user).serializable_hash[:data][:attributes]
       end
     end
   end
