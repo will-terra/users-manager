@@ -39,6 +39,6 @@ class ErrorsController < ApplicationController
         message: "Unprocessable entity",
         details: "The request was well-formed but unable to be processed."
       }
-    }, status: :unprocessable_entity
+    }, status: :unprocessable_content
   end
 end

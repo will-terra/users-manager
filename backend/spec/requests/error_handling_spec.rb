@@ -63,7 +63,7 @@ RSpec.describe 'Error Handling', type: :request do
             params: { user: { email: 'invalid-email' } },
             headers: { 'Authorization' => user_token }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       json_response = JSON.parse(response.body)
       expect(json_response['success']).to be false
       expect(json_response['error']['details']).to be_present

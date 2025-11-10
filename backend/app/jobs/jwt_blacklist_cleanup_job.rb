@@ -1,4 +1,4 @@
-class JwtBlacklistCleanupJob < ApplicationJob
+class JWTBlacklistCleanupJob < ApplicationJob
   queue_as :default
 
   def perform

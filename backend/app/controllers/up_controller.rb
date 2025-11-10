@@ -1,7 +1,8 @@
 # Health check endpoint for monitoring service availability
 class UpController < ApplicationController
-  # Allow public access without authentication
-  skip_before_action :authenticate_user!
+  # Allow public access without authentication. Use `raise: false` so tests
+  # don't fail if the parent controller doesn't define the callback.
+  skip_before_action :authenticate_user!, raise: false
 
   # Returns service status with timestamp and environment
   def index

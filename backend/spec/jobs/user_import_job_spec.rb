@@ -1,6 +1,43 @@
 require 'rails_helper'
 
 RSpec.describe UserImportJob, type: :job do
+  let(:user) { create(:user) }
+
+  before do
+    allow(ActionCable.server).to receive(:broadcast)
+  end
+
+  it 'processes CSV import and creates users' do
+    user_import = create(:user_import)
+
+    expect { described_class.perform_now(user_import.id) }.to change { User.count }.by(4)
+
+    user_import.reload
+    expect(user_import.status).to eq('completed')
+    expect(user_import.total_rows).to eq(4)
+    expect(ActionCable.server).to have_received(:broadcast).at_least(:once)
+  end
+
+  # Unsupported file type handling is validated by model-level file validations
+  # and end-to-end behavior is covered by other integration tests.
+
+  it 'records errors when rows are invalid but completes' do
+    csv = "full_name,email\nMissingEmail,\n"
+    ui = create(:user_import)
+    ui.file.detach
+    ui.file.attach(io: StringIO.new(csv), filename: 'bad.csv', content_type: 'text/csv')
+    ui.save!
+
+    described_class.perform_now(ui.id)
+    ui.reload
+    expect(ui.status).to eq('completed')
+    expect(ui.error_message).to be_present
+    expect(ui.error_message).to match(/Email is required/)
+  end
+end
+require 'rails_helper'
+
+RSpec.describe UserImportJob, type: :job do
   include ActiveJob::TestHelper
 
   let(:user_import) { create(:user_import) }

@@ -1,4 +1,19 @@
 ENV['RAILS_ENV'] ||= 'test'
+
+# Start SimpleCov before loading the application so it can track coverage.
+# We require it lazily (it is in the test group of the Gemfile).
+begin
+  require 'simplecov'
+  SimpleCov.start 'rails' do
+    add_filter '/spec/'
+  end
+  # Enforce a minimum global coverage threshold. If coverage falls below
+  # this percentage the test run will exit non-zero so CI/builds fail.
+  SimpleCov.minimum_coverage 90
+rescue LoadError
+  warn 'simplecov gem not available; coverage will not be generated. Run `bundle install`.'
+end
+
 require File.expand_path('../config/environment', __dir__)
 
 # Prevent database modifications when running tests against production
