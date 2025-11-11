@@ -114,8 +114,9 @@ example_id                                                  | status | run_time 
 ./spec/requests/api/v1/admin/users_spec.rb[1:5:1:1]         | passed | 0.03396 seconds |
 ./spec/requests/api/v1/admin/users_spec.rb[1:5:1:2]         | passed | 0.03565 seconds |
 ./spec/requests/api/v1/admin/users_spec.rb[1:5:1:3]         | passed | 0.01691 seconds |
-./spec/requests/api/v1/registrations_spec.rb[1:1:1:1]       | passed | 0.03853 seconds |
-./spec/requests/api/v1/registrations_spec.rb[1:1:2:1]       | passed | 0.01247 seconds |
+./spec/requests/api/v1/registrations_spec.rb[1:1:1:1]       | passed | 0.01478 seconds |
+./spec/requests/api/v1/registrations_spec.rb[1:1:1:2]       | passed | 0.02308 seconds |
+./spec/requests/api/v1/registrations_spec.rb[1:1:2:1]       | passed | 0.27781 seconds |
 ./spec/requests/api/v1/sessions_spec.rb[1:1:1:1]            | passed | 0.01659 seconds |
 ./spec/requests/api/v1/sessions_spec.rb[1:1:1:2]            | passed | 0.01382 seconds |
 ./spec/requests/api/v1/sessions_spec.rb[1:1:2:1]            | passed | 0.01111 seconds |
@@ -156,12 +157,3 @@ example_id                                                  | status | run_time 
 ./spec/services/user_search_service_spec.rb[1:1]            | passed | 0.02172 seconds |
 ./spec/services/user_search_service_spec.rb[1:2]            | passed | 0.01765 seconds |
 ./spec/services/user_search_service_spec.rb[1:3]            | passed | 0.0245 seconds  |
-/tmp/simple_delete_test.rb[1:1]                             | passed | 0.66354 seconds |
-/tmp/test_422_debug.rb[1:1]                                 | passed | 0.60347 seconds |
-/tmp/test_debug.rb[1:1]                                     | passed | 1.23 seconds    |
-/tmp/test_delete.rb[1:1]                                    | failed | 0.75127 seconds |
-/tmp/test_error_handling_debug.rb[1:1]                      | failed | 0.01195 seconds |
-/tmp/test_error_handling_debug.rb[1:2]                      | failed | 0.07287 seconds |
-/tmp/test_error_handling_debug.rb[1:3]                      | passed | 0.03086 seconds |
-/tmp/test_error_handling_debug.rb[1:4]                      | passed | 0.36768 seconds |
-/tmp/test_registrations_debug.rb[1:1]                       | passed | 0.13392 seconds |

@@ -16,8 +16,8 @@ module Api
       # On success returns: { user: { ... }, token: 'jwt', redirect_to: '/profile' }
       def create
         user = User.new(registration_params)
-        # Set a sensible default role for new signups
-        user.role = "user"
+        # Set role: first user is admin, others are user
+        user.role = User.exists? ? "user" : "admin"
 
         if user.save
           # Issue a JWT for the newly created user so the client can authenticate

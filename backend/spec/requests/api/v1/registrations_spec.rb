@@ -22,6 +22,22 @@ RSpec.describe 'Api::V1::Registrations', type: :request do
         expect(response).to have_http_status(:created)
         json_response = JSON.parse(response.body)
         expect(json_response['user']['email']).to eq('john@example.com')
+        expect(json_response['user']['role']).to eq('admin')
+        expect(json_response['token']).to be_present
+        expect(json_response['redirect_to']).to eq('/profile')
+      end
+
+      it 'creates subsequent users as regular users' do
+        # Create the first user (admin)
+        create(:user, :admin)
+
+        expect {
+          post '/api/v1/sign_up', params: valid_attributes
+        }.to change(User, :count).by(1)
+
+        expect(response).to have_http_status(:created)
+        json_response = JSON.parse(response.body)
+        expect(json_response['user']['email']).to eq('john@example.com')
         expect(json_response['user']['role']).to eq('user')
         expect(json_response['token']).to be_present
         expect(json_response['redirect_to']).to eq('/profile')

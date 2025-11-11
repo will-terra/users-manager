@@ -19,7 +19,6 @@ default: &default
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   pool: <%= Rails.application.credentials.dig(:rails, :max_threads) || 5 %>
 
-
 development:
   <<: *default
   database: backend_development
