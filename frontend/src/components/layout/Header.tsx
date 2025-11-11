@@ -14,7 +14,9 @@ export const Header: React.FC = () => {
       <div className="header-actions">
         {currentUser && (
           <div className="user-menu">
-            <span className="user-greeting">{currentUser.full_name.trim().split(/\s+/)[0]}</span>
+            <span className="user-greeting">
+              {currentUser.full_name.trim().split(/\s+/)[0]}
+            </span>
             <button onClick={logout} className="logout-btn">
               Logout
             </button>

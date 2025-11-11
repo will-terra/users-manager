@@ -1,219 +1,97 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { NotificationBanner } from "../../components/NotificationBanner";
 import { useAuth } from "../../hooks/useAuth";
+import { useProfileForm } from "../../hooks/useProfileForm";
+import { ProfileAvatar } from "./components/ProfileAvatar";
+import { ProfileForm } from "./components/ProfileForm";
+import { ProfileInfo } from "./components/ProfileInfo";
 import "./Profile.scss";
 
 export const Profile: React.FC = () => {
-  const { currentUser, updateProfile } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    full_name: currentUser?.full_name || "",
-    email: currentUser?.email || "",
-    avatar: null as File | null,
-    avatar_url: "",
-    remove_avatar: false,
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const {
+    currentUser,
+    updateProfile,
+    globalError,
+    globalSuccess,
+    setGlobalError,
+    setGlobalSuccess,
+    clearNotifications,
+  } = useAuth();
 
-  useEffect(() => {
-    if (currentUser && !isEditing) {
-      setFormData({
-        full_name: currentUser.full_name,
-        email: currentUser.email,
-        avatar: null,
-        avatar_url: "",
-        remove_avatar: false,
-      });
-    }
-  }, [currentUser, isEditing]);
+  const {
+    isEditing,
+    formData,
+    loading,
+    localError,
+    setIsEditing,
+    handleChange,
+    handleSubmit,
+    handleCancel,
+    handleRemoveAvatar,
+  } = useProfileForm({
+    currentUser,
+    updateProfile,
+    onSuccess: () => {
+      setGlobalSuccess("Profile updated successfully!");
+      setIsEditing(false);
+    },
+    onError: (error: string) => {
+      setGlobalError(error);
+    },
+  });
 
   if (!currentUser) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="profile-page">
+        <div className="loading" role="status" aria-live="polite">
+          Loading profile...
+        </div>
+      </div>
+    );
   }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, files } = e.target;
-
-    if (name === "avatar" && files) {
-      setFormData((prev) => ({ ...prev, avatar: files[0] }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      const updateData = {
-        full_name: formData.full_name,
-        email: formData.email,
-        avatar_url: formData.avatar_url,
-        remove_avatar: formData.remove_avatar,
-        ...(formData.avatar && { avatar: formData.avatar }),
-      };
-      await updateProfile(updateData);
-      setSuccess("Profile updated successfully!");
-      setIsEditing(false);
-      setFormData({
-        full_name: formData.full_name,
-        email: formData.email,
-        avatar: null,
-        avatar_url: "",
-        remove_avatar: false,
-      });
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    setFormData({
-      full_name: currentUser.full_name,
-      email: currentUser.email,
-      avatar: null,
-      avatar_url: "",
-      remove_avatar: false,
-    });
-    setError("");
-  };
-
-  const handleRemoveAvatar = () => {
-    setFormData((prev) => ({ ...prev, remove_avatar: true }));
-  };
 
   return (
     <div className="profile-page">
-      <div className="profile-header">
+      <header className="profile-header">
         <h1>My Profile</h1>
         {!isEditing && (
           <button
             className="btn btn-primary"
-            onClick={() => setIsEditing(true)}
+            onClick={() => {
+              clearNotifications();
+              setIsEditing(true);
+            }}
+            aria-label="Edit profile"
           >
             Edit Profile
           </button>
         )}
-      </div>
+      </header>
 
-      {error && <div className="error-banner">{error}</div>}
-      {success && <div className="success-banner">{success}</div>}
+      <NotificationBanner
+        error={globalError || localError}
+        success={globalSuccess}
+        onDismiss={clearNotifications}
+      />
 
       <div className="profile-card">
-        <div className="profile-avatar-section">
-          {currentUser.has_avatar &&
-          currentUser.avatar_urls &&
-          !formData.remove_avatar ? (
-            <img
-              src={`http://localhost:3001${currentUser.avatar_urls.medium}`}
-              className="profile-avatar"
-            />
-          ) : (
-            <div className="profile-avatar-placeholder">
-              {currentUser.full_name?.trim().charAt(0).toUpperCase() ?? ""}
-            </div>
-          )}
-
-          {isEditing && (
-            <div className="avatar-actions">
-              <div className="form-group">
-                <label htmlFor="avatar">Upload New Avatar</label>
-                <input
-                  type="file"
-                  id="avatar"
-                  name="avatar"
-                  accept="image/*"
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="avatar_url">Or enter image URL</label>
-                <input
-                  type="url"
-                  id="avatar_url"
-                  name="avatar_url"
-                  value={formData.avatar_url}
-                  onChange={handleChange}
-                  placeholder="https://example.com/avatar.jpg"
-                />
-              </div>
-              {currentUser.has_avatar && (
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={handleRemoveAvatar}
-                >
-                  Remove Avatar
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        <ProfileAvatar
+          user={currentUser}
+          removeAvatar={formData.remove_avatar}
+        />
 
         {isEditing ? (
-          <form onSubmit={handleSubmit} className="profile-form">
-            <div className="form-group">
-              <label htmlFor="full_name">Full Name</label>
-              <input
-                type="text"
-                id="full_name"
-                name="full_name"
-                value={formData.full_name}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={loading}
-              >
-                {loading ? "Saving..." : "Save Changes"}
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={handleCancel}
-                disabled={loading}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+          <ProfileForm
+            formData={formData}
+            currentUser={currentUser}
+            loading={loading}
+            onChange={handleChange}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            onRemoveAvatar={handleRemoveAvatar}
+          />
         ) : (
-          <div className="profile-info">
-            <div className="info-item">
-              <label>Full Name:</label>
-              <span>{currentUser.full_name}</span>
-            </div>
-            <div className="info-item">
-              <label>Email:</label>
-              <span>{currentUser.email}</span>
-            </div>
-            <div className="info-item">
-              <label>Role:</label>
-              <span className={`role-badge ${currentUser.role}`}>
-                {currentUser.role}
-              </span>
-            </div>
-            <div className="info-item">
-              <label>Member Since:</label>
-              <span>
-                {currentUser.created_at
-                  ? new Date(currentUser.created_at).toLocaleDateString()
-                  : "N/A"}
-              </span>
-            </div>
-          </div>
+          <ProfileInfo user={currentUser} />
         )}
       </div>
     </div>

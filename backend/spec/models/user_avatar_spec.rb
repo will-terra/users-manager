@@ -20,7 +20,7 @@ RSpec.describe 'User Avatar Handling', type: :model do
         content_type: 'text/plain'
       )
       expect(user).not_to be_valid
-      expect(user.errors[:avatar]).to include('must be one of: image/jpeg, image/png, image/gif, image/webp')
+      expect(user.errors[:avatar]).to include('must be one of: .jpeg .png .gif .webp')
     end
 
     it 'rejects files that are too large' do

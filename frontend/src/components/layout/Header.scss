@@ -6,6 +6,7 @@
   background: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid #e9ecef;
+  max-width: 100dvw;
 
   .header-brand {
     h1 {
@@ -46,7 +47,6 @@
 @media (max-width: 768px) {
   .header {
     padding: 1rem;
-
     .header-brand h1 {
       font-size: 1.2rem;
     }

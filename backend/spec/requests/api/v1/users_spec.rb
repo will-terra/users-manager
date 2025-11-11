@@ -12,8 +12,8 @@ RSpec.describe 'Api::V1::Users', type: :request do
           headers: { 'Authorization' => token }
 
       expect(response).to have_http_status(:ok)
-      json_response = JSON.parse(response.body)
-      expect(json_response['data']['attributes']['email']).to eq(user.email)
+  json_response = JSON.parse(response.body)
+  expect(json_response['data']['email']).to eq(user.email)
     end
   end
 

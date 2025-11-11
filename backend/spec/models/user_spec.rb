@@ -23,36 +23,6 @@ RSpec.describe User, type: :model do
     end
   end
 
-  describe 'avatar attachments' do
-    it 'validates content type' do
-      user.avatar.attach(
-        io: File.open(Rails.root.join('spec', 'fixtures', 'files', 'test.txt')),
-        filename: 'test.txt',
-        content_type: 'text/plain'
-      )
-      expect(user).not_to be_valid
-      expect(user.errors[:avatar]).to include('must be one of: image/jpeg, image/png, image/gif, image/webp')
-    end
-
-    it 'validates file size' do
-      user.avatar.attach(
-        io: File.open(Rails.root.join('spec', 'fixtures', 'files', 'large_image.jpg')),
-        filename: 'large_image.jpg',
-        content_type: 'image/jpeg'
-      )
-      expect(user).not_to be_valid
-      expect(user.errors[:avatar]).to include('must be less than 5MB')
-    end
-
-    it 'accepts valid avatar' do
-      user.avatar.attach(
-        io: File.open(Rails.root.join('spec', 'fixtures', 'files', 'avatar.png')),
-        filename: 'avatar.png',
-        content_type: 'image/png'
-      )
-      expect(user).to be_valid
-    end
-  end
 
   describe 'methods' do
     it '#admin? returns true for admin users' do

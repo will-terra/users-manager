@@ -27,6 +27,31 @@ body {
   color: #6c757d;
 }
 
+.success-banner {
+  background: #d4edda;
+  color: #155724;
+  width: 100%;
+  justify-content: space-between;
+  display: flex;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border: 1px solid #c3e6cb;
+
+  button {
+    background: #222021;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+      background: #222021;
+    }
+  }
+}
+
 .error-banner {
   background: #f8d7da;
   color: #721c24;
@@ -34,6 +59,7 @@ body {
   border-radius: 4px;
   margin: 1rem 0;
   display: flex;
+  width: 100%;
   justify-content: space-between;
   align-items: center;
 

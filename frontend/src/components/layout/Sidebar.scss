@@ -3,6 +3,7 @@
   background: #2c3e50;
   color: white;
   overflow-y: auto;
+  max-width: 100dvw;
 
   .nav-list {
     list-style: none;
@@ -62,7 +63,7 @@
     .nav-list {
       display: flex;
       overflow-x: auto;
-
+      justify-content: space-evenly;
       .nav-divider {
         display: none;
       }

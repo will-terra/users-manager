@@ -23,6 +23,7 @@ class User < ApplicationRecord
   validates :role, presence: true, inclusion: { in: ROLES }
 
   # Avatar handling
+  AVATAR_EXTENSIONS = %w[.jpeg .png .gif .webp].freeze
   AVATAR_CONTENT_TYPES = %w[image/jpeg image/png image/gif image/webp].freeze
   AVATAR_MAX_SIZE = 5.megabytes
   AVATAR_DIMENSIONS = { width: 500, height: 500 }.freeze
@@ -138,7 +139,8 @@ class User < ApplicationRecord
     return unless avatar.attached?
 
     unless avatar.content_type.in?(AVATAR_CONTENT_TYPES)
-      errors.add(:avatar, "must be one of: #{AVATAR_CONTENT_TYPES.join(', ')}")
+      # Match spec expectation: space-separated extensions (no commas)
+      errors.add(:avatar, "must be one of: #{AVATAR_EXTENSIONS.join(' ')}")
     end
   end
 

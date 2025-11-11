@@ -25,6 +25,12 @@ interface AuthContextType {
     },
   ) => Promise<void>;
   isLoading: boolean;
+  // Global notifications (quick solution for persistent messages across remounts)
+  globalError: string | null;
+  globalSuccess: string | null;
+  setGlobalError: (msg: string | null) => void;
+  setGlobalSuccess: (msg: string | null) => void;
+  clearNotifications: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,6 +45,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [token, setTokenState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const [globalSuccess, setGlobalSuccess] = useState<string | null>(null);
 
   const isAuthenticated = authService.isAuthenticated();
 
@@ -138,6 +146,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const setGlobalErrorMsg = (msg: string | null) => {
+    setGlobalError(msg);
+  };
+
+  const setGlobalSuccessMsg = (msg: string | null) => {
+    setGlobalSuccess(msg);
+  };
+
+  const clearNotifications = () => {
+    setGlobalError(null);
+    setGlobalSuccess(null);
+  };
+
   const value: AuthContextType = {
     currentUser,
     token,
@@ -148,6 +169,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshUser,
     updateProfile,
     isLoading,
+    globalError,
+    globalSuccess,
+    setGlobalError: setGlobalErrorMsg,
+    setGlobalSuccess: setGlobalSuccessMsg,
+    clearNotifications,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

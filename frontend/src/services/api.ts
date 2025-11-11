@@ -27,13 +27,20 @@ async function handleResponse<T>(
 
   // Handle other error statuses
   if (!response.ok) {
-    const errorBody = await response.json();
+    const errorBody = await response.json().catch(() => null);
     const message =
-      errorBody.error?.message ||
-      errorBody.message ||
+      errorBody?.error?.details[0].message ||
+      errorBody?.message ||
       response.statusText ||
       "Request failed";
-    throw new Error(message);
+
+    const err = new Error(message) as Error & {
+      body?: unknown;
+      status?: number;
+    };
+    err.body = errorBody;
+    err.status = response.status;
+    throw err;
   }
 
   // Handle 204 No Content

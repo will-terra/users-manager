@@ -9,7 +9,7 @@ export const Login: React.FC = () => {
     email: "",
     password: "",
   });
-  const [error, setError] = useState("");
+  const { globalError, setGlobalError, setGlobalSuccess } = useAuth();
   const [loading, setLoading] = useState(false);
   const mountedRef = useRef(true);
 
@@ -35,7 +35,8 @@ export const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setGlobalError(null);
+    setGlobalSuccess(null);
     setLoading(true);
 
     try {
@@ -45,7 +46,7 @@ export const Login: React.FC = () => {
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       if (mountedRef.current) {
-        setError(errorMessage);
+        setGlobalError(errorMessage);
         setLoading(false);
       }
     }
@@ -93,7 +94,7 @@ export const Login: React.FC = () => {
             >
               {loading ? "Logging in..." : "Login"}
             </button>
-            {error && <div className="error-message">{error}</div>}
+            {globalError && <div className="error-message">{globalError}</div>}
           </form>
 
           <p className="auth-link">

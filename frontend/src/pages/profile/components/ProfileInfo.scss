@@ -1,0 +1,41 @@
+.profile-info {
+  .info-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e9ecef;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    dt {
+      font-weight: 600;
+      color: #495057;
+      min-width: 120px;
+    }
+
+    dd {
+      color: #6c757d;
+      margin: 0;
+    }
+
+    .role-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+
+      &.admin {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      &.user {
+        background: #fff3cd;
+        color: #856404;
+      }
+    }
+  }
+}

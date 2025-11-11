@@ -11,7 +11,7 @@ export const Register: React.FC = () => {
     password: "",
     password_confirmation: "",
   });
-  const [error, setError] = useState<string>("");
+  const { globalError, setGlobalError, setGlobalSuccess } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const { register } = useAuth();
@@ -34,7 +34,8 @@ export const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setGlobalError(null);
+    setGlobalSuccess(null);
     setLoading(true);
 
     try {
@@ -42,7 +43,7 @@ export const Register: React.FC = () => {
       const redirectTo = response.redirect_to || "/profile";
       navigate(redirectTo, { replace: true });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
+      setGlobalError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -118,7 +119,7 @@ export const Register: React.FC = () => {
             >
               {loading ? "Creating Account..." : "Register"}
             </button>
-            {error && <div className="error-message">{error}</div>}
+            {globalError && <div className="error-message">{globalError}</div>}
             {formData.password_confirmation !== "" && !passwordsMatch && (
               <div className="error-message">Passwords do not match</div>
             )}
