@@ -10,6 +10,7 @@ module Api
       skip_before_action :authenticate_user_from_token!, only: [ :create ]
 
       before_action :pundit_skip!
+      before_action :require_authentication!, only: [ :refresh ]
 
       # POST /api/v1/sessions
       # Params: { user: { email: string, password: string } }
@@ -43,6 +44,22 @@ module Api
       def destroy
         # JWT logout is handled client-side by discarding the token
         render_success(nil, status: :no_content)
+      end
+
+      # POST /api/v1/sessions/refresh
+      # Refreshes the JWT token for authenticated users, providing a new token
+      # with updated expiration time. This allows users to stay logged in
+      # while actively using the application.
+      def refresh
+        token = current_user.generate_jwt
+        render_success(
+          {
+            user: user_serialized(current_user),
+            token: token,
+            redirect_to: redirect_path(current_user)
+          },
+          status: :ok
+        )
       end
 
       private

@@ -34,7 +34,7 @@ module Api
         # This action requires authentication (already enforced by before_action)
         # Authorize using UserPolicy#profile? which always returns true for authenticated users
         authorize current_user, :profile?
-        render json: UserSerializer.new(current_user).serializable_hash
+        render json: { data: UserSerializer.new(current_user).serializable_hash[:data][:attributes] }
       end
 
       # PATCH/PUT /api/v1/users/:id
@@ -45,6 +45,21 @@ module Api
           render json: UserSerializer.new(@user).serializable_hash
         else
           render_validation_errors(@user)
+        end
+      end
+
+      # PATCH /api/v1/users/profile
+      # Updates the currently authenticated user's profile. Mirrors the
+      # behaviour of `update` but operates on `current_user` instead of
+      # expecting an :id path parameter. This endpoint is used by the
+      # frontend when a client wants to update the signed-in user's own
+      # profile (including uploading an avatar file).
+      def profile_update
+        authorize current_user, :update?
+        if current_user.update(user_params)
+          render json: { data: UserSerializer.new(current_user).serializable_hash[:data][:attributes] }
+        else
+          render_validation_errors(current_user)
         end
       end
 

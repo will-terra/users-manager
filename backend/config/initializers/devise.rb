@@ -50,7 +50,7 @@ Devise.setup do |config|
     jwt.revocation_requests = [
       [ "DELETE", %r{^/api/v1/sign_out$} ]
     ]
-    jwt.expiration_time = 7.days.to_i
+    jwt.expiration_time = 15.minutes.to_i
   end
 
   # ==> Configuration for any authentication mechanism

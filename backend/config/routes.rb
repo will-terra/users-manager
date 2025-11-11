@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  # Mount ActiveStorage routes for serving files and variants
+  mount ActiveStorage::Engine => "/rails/active_storage"
   devise_for :users # Devise authentication endpoints
 
   # Simple health check for uptime monitoring
@@ -13,6 +15,7 @@ Rails.application.routes.draw do
       post "sign_in",  to: "sessions#create"
       delete "sign_out", to: "sessions#destroy"
       post "sign_up",  to: "registrations#create"
+      post "refresh_token", to: "sessions#refresh" # Refresh JWT token
 
       # Regular user-facing operations
       resources :users, only: [ :index, :show, :update, :destroy ] do
@@ -21,6 +24,10 @@ Rails.application.routes.draw do
         end
         collection do
           get :profile # Current user profile summary
+          # Allow clients to PATCH /api/v1/users/profile to update the
+          # currently authenticated user's profile (including avatar uploads)
+          # Map the PATCH to the `profile_update` action on the controller.
+          patch :profile, action: :profile_update
         end
       end
 
@@ -46,6 +53,6 @@ Rails.application.routes.draw do
   get "/422", to: "errors#unprocessable_entity"
   get "/500", to: "errors#internal_server_error"
 
-  # Catch all for undefined routes
-  match "*unmatched", to: "errors#not_found", via: :all
+  # Catch all for undefined routes (but exclude rails/active_storage paths)
+  match "*unmatched", to: "errors#not_found", via: :all, constraints: lambda { |req| !req.path.start_with?("/rails/active_storage") }
 end

@@ -41,6 +41,9 @@ module Backend
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
+  # Serve static files (needed for ActiveStorage in API-only mode)
+  config.middleware.use ActionDispatch::Static, "#{Rails.root}/public"
+
     # Configure custom exception handling using routes
     config.exceptions_app = self.routes
 

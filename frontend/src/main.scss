@@ -1,4 +1,3 @@
-// Reset and base styles
 * {
   margin: 0;
   padding: 0;
@@ -19,7 +18,6 @@ body {
   color: #333;
 }
 
-// Utility classes
 .loading-screen {
   display: flex;
   justify-content: center;
@@ -53,14 +51,12 @@ body {
   }
 }
 
-// Responsive grid
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
 }
 
-// Button styles
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
@@ -105,7 +101,6 @@ body {
   }
 }
 
-// Form styles
 .form-group {
   margin-bottom: 1rem;
 
@@ -138,7 +133,6 @@ body {
   }
 }
 
-// Card styles
 .card {
   background: white;
   border-radius: 8px;
@@ -147,7 +141,6 @@ body {
   margin-bottom: 1.5rem;
 }
 
-// Responsive design
 @media (max-width: 768px) {
   .container {
     padding: 0 0.5rem;

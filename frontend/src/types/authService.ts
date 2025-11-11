@@ -17,3 +17,11 @@ export interface AuthResponse {
   token: string;
   redirect_to?: string;
 }
+
+export interface JwtPayload {
+  id: number;
+  exp: number;
+  email: string;
+  role: string;
+  full_name: string;
+}

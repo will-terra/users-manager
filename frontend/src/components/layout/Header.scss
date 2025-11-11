@@ -52,8 +52,8 @@
     }
 
     .user-menu {
-      flex-direction: column;
-      gap: 0.5rem !important;
+      display: flex;
+      gap: 1.5rem !important;
     }
   }
 }

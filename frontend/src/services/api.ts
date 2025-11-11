@@ -3,8 +3,7 @@
  * Handles 401 responses by clearing token and redirecting to /login.
  */
 
-import type { AdminStats } from "../hooks/useAdminStats";
-import type { Pagination, RegisterData } from "../types/api";
+import type { AdminStats, Pagination, RegisterData } from "../types/api";
 import type { AuthResponse, LoginCredentials } from "../types/authService";
 import type { User } from "../types/user";
 import { authService } from "./authService";
@@ -143,6 +142,16 @@ export const authApi = {
       const value = userData[key as keyof typeof userData];
       if (key === "avatar" && value instanceof File) {
         formData.append("user[avatar]", value);
+      } else if (key === "remove_avatar") {
+        // Rails model expects remove_avatar to be the string '1' to trigger purge
+        if (value) {
+          formData.append("user[remove_avatar]", "1");
+        }
+      } else if (key === "avatar_url") {
+        // Only append avatar_url when non-empty; an empty string signals removal
+        if (value && String(value).trim() !== "") {
+          formData.append(`user[${key}]`, String(value));
+        }
       } else if (value !== undefined && value !== null) {
         formData.append(`user[${key}]`, String(value));
       }

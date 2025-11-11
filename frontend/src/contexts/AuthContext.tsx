@@ -48,8 +48,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = authService.getToken();
       if (token && authService.isAuthenticated()) {
         setTokenState(token);
-        const user = authService.getCurrentUser();
-        setCurrentUser(user);
+        // Try to get full user data from localStorage first, fallback to JWT reconstruction
+        const storedUser = localStorage.getItem("currentUser");
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            setCurrentUser(user);
+          } catch (error) {
+            console.error("Failed to parse stored user data:", error);
+            // Fallback to JWT reconstruction
+            const user = authService.getCurrentUser();
+            setCurrentUser(user);
+          }
+        } else {
+          // Fallback to JWT reconstruction
+          const user = authService.getCurrentUser();
+          setCurrentUser(user);
+        }
       }
       setIsLoading(false);
     };
@@ -63,6 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const response = await authApi.login(credentials);
     setTokenState(response.data.token);
     setCurrentUser(response.data.user);
+    localStorage.setItem("currentUser", JSON.stringify(response.data.user));
     return response.data;
   };
 
@@ -72,6 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authApi.register(payload);
       setTokenState(response.data.token);
       setCurrentUser(response.data.user);
+      localStorage.setItem("currentUser", JSON.stringify(response.data.user));
       return response.data;
     } finally {
       setIsLoading(false);
@@ -84,6 +101,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authApi.logout();
       setTokenState(null);
       setCurrentUser(null);
+      localStorage.removeItem("currentUser");
     } finally {
       setIsLoading(false);
     }
@@ -94,9 +112,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     setIsLoading(true);
     try {
-      const user = authService.getCurrentUser();
-      setCurrentUser(user);
-      // TODO: Implement API call to refresh user data
+      const response = await authApi.getProfile();
+      setCurrentUser(response.data);
+      localStorage.setItem("currentUser", JSON.stringify(response.data));
     } finally {
       setIsLoading(false);
     }
@@ -113,6 +131,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await authApi.updateProfile(data);
       setCurrentUser(response.data);
+      // Update stored user data
+      localStorage.setItem("currentUser", JSON.stringify(response.data));
     } finally {
       setIsLoading(false);
     }

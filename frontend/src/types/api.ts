@@ -22,3 +22,21 @@ export interface RegisterData {
   password: string;
   password_confirmation?: string;
 }
+
+export interface ImportProgress {
+  id: number;
+  status: "pending" | "processing" | "completed" | "failed";
+  progress: number;
+  total_rows: number;
+  percentage: number;
+  error_message?: string;
+  file_name: string;
+  created_at: string;
+  user?: {
+    id: number;
+    full_name: string;
+  };
+  successful_imports?: number;
+  failed_imports?: number;
+  recent_errors?: string[];
+}

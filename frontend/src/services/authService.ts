@@ -4,6 +4,7 @@
  * Handles JWT decoding, expiration checking, and user extraction from tokens.
  */
 
+import type { JwtPayload } from "../types/authService";
 import type { User } from "../types/user";
 
 // Storage strategy configuration
@@ -74,16 +75,6 @@ const tokenStorages: Record<StorageType, TokenStorage> = {
 
 const tokenStorage = tokenStorages[STORAGE_TYPE];
 
-// JWT payload interface
-export interface JwtPayload {
-  user?: User;
-  exp?: number;
-  iat?: number;
-  sub?: string;
-}
-
-// User interface
-
 // JWT utility functions
 function decodeJWT(token: string): JwtPayload | null {
   if (!token || token.split(".").length !== 3) return null;
@@ -140,17 +131,25 @@ export const authService = {
 
   /**
    * Get current user from token (without API call)
+   * Note: JWT contains basic user info (id, email, role, full_name, exp).
+   * Additional data like avatar should be obtained from API responses.
    */
   getCurrentUser(): User | null {
     const token = this.getToken();
     if (!token || isTokenExpired(token)) return null;
     const decoded = decodeJWT(token);
-    return decoded?.user || null;
-  },
+    if (!decoded) return null;
 
-  /**
+    // Reconstruct User object from JWT payload
+    return {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+      full_name: decoded.full_name,
+    } as User;
+  } /**
    * Decode JWT token
-   */
+   */,
   decodeToken(token: string): JwtPayload | null {
     return decodeJWT(token);
   },
