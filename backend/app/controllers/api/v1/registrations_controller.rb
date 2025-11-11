@@ -22,14 +22,21 @@ module Api
         if user.save
           # Issue a JWT for the newly created user so the client can authenticate
           token = user.generate_jwt
-          render json: {
-            user: user_serialized(user),
-            token: token,
-            redirect_to: "/profile"
-          }, status: :created
+
+          # Use the same success response shape as SessionsController so the
+          # frontend (which expects { data: { user, token, redirect_to } })
+          # can immediately set the token and navigate.
+          render_success(
+            {
+              user: user_serialized(user),
+              token: token,
+              redirect_to: redirect_path(user)
+            },
+            status: :created
+          )
         else
-          # Return validation errors to the client
-          render json: { errors: user.errors.full_messages }, status: :unprocessable_content
+          # Return structured validation errors using the BaseController helper
+          render_validation_errors(user)
         end
       end
 
@@ -43,6 +50,11 @@ module Api
       # Serialize user data for the response
       def user_serialized(user)
         UserSerializer.new(user).serializable_hash[:data][:attributes]
+      end
+
+      # Choose a redirect path based on user role. Mirrors SessionsController.
+      def redirect_path(user)
+        user.admin? ? "/admin/dashboard" : "/profile"
       end
     end
   end
