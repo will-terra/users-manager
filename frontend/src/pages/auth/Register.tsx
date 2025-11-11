@@ -51,8 +51,6 @@ export const Register: React.FC = () => {
   return (
     <div className="auth-page">
       <div className="auth-container">
-
-
         <div className="auth-card">
           <h1>Users Manager</h1>
           <h2>Register:</h2>

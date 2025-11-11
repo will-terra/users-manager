@@ -1,58 +1,84 @@
 module Api
   module V1
-    # Controller responsible for user registration (sign up).
-    #
-    # - `create` registers a new user, assigns a default role, issues a JWT,
-    #   and returns the serialized user plus token on success.
-    # - Uses strong parameters to permit only the expected attributes.
+    # Controller responsible for handling user registration/sign-up requests
+    # Inherits from BaseController to leverage common API functionality
     class RegistrationsController < BaseController
-      # Allow unauthenticated access to registration
+      # Skip authentication for the create action since users registering don't have tokens yet
       skip_before_action :authenticate_user_from_token!, only: [ :create ]
 
+      # Skip Pundit authorization checks for this controller
+      # Registration is a public endpoint that doesn't require authorization policies
       before_action :pundit_skip!
 
       # POST /api/v1/registrations
-      # Params: { user: { full_name, email, password, password_confirmation } }
-      # On success returns: { user: { ... }, token: 'jwt', redirect_to: '/profile' }
+      # Creates a new user account and returns user data with authentication token
       def create
+        # Initialize a new user with the permitted registration parameters
         user = User.new(registration_params)
-        # Set role: first user is admin, others are user
+
+        # Assign role: first user becomes admin, all subsequent users are regular users
+        # This ensures the system always has at least one admin account
         user.role = User.exists? ? "user" : "admin"
 
-        if user.save
-          # Issue a JWT for the newly created user so the client can authenticate
-          token = user.generate_jwt
+          # Attempt to save the user to the database (triggers validations)
+          if user.save
+            # Generate a JWT authentication token for the newly created user
+            token = user.generate_jwt
 
-          # Use the same success response shape as SessionsController so the
-          # frontend (which expects { data: { user, token, redirect_to } })
-          # can immediately set the token and navigate.
-          render_success(
-            {
+            # Return success response with user data and token
+            # Note: Data is duplicated in both nested 'data' object and root level
+            # for backwards compatibility or different client requirements
+            render json: {
+              success: true,
+              data: {
+                user: user_serialized(user),
+                token: token,
+                redirect_to: "/profile"
+              },
               user: user_serialized(user),
               token: token,
-              redirect_to: redirect_path(user)
+              redirect_to: "/profile"
             },
             status: :created
-          )
-        else
-          # Return structured validation errors using the BaseController helper
-          render_validation_errors(user)
-        end
+          else
+            # Return error response if validation fails
+            # Includes validation error messages to help user correct their input
+            render json: {
+              success: false,
+              error: {
+                code: :unprocessable_content,
+                message: "Validation failed",
+                details: user.errors.full_messages
+              },
+              errors: user.errors.full_messages
+            },
+            status: :unprocessable_content
+          end
       end
 
       private
 
-      # Strong parameters for registration
+      # Strong parameters method to whitelist allowed user registration attributes
+      # Prevents mass assignment vulnerabilities by only permitting specific fields
+      # @return [ActionController::Parameters] permitted parameters for user creation
       def registration_params
         params.require(:user).permit(:full_name, :email, :password, :password_confirmation)
       end
 
       # Serialize user data for the response
+      # Converts the User model into a JSON-friendly hash using UserSerializer
+      # Extracts the attributes from the serializer's nested structure
+      # @param user [User] the user object to serialize
+      # @return [Hash] serialized user attributes
       def user_serialized(user)
         UserSerializer.new(user).serializable_hash[:data][:attributes]
       end
 
       # Choose a redirect path based on user role. Mirrors SessionsController.
+      # Admin users are redirected to the admin dashboard, regular users to their profile
+      # Note: This method is defined but not currently used in the create action
+      # @param user [User] the user object to determine redirect for
+      # @return [String] the path to redirect to
       def redirect_path(user)
         user.admin? ? "/admin/dashboard" : "/profile"
       end

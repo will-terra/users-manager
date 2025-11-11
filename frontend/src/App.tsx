@@ -8,6 +8,7 @@ import { Layout } from "./components/layout/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PublicRoute } from "./components/PublicRoute";
 import { AdminDashboard } from "./pages/admin/Dashboard";
+import { ImportPage } from "./pages/admin/ImportPage";
 import { UserEditPage } from "./pages/admin/UserEditPage";
 import { UserNewPage } from "./pages/admin/UserNewPage";
 import { UsersPage } from "./pages/admin/UsersPage";
@@ -82,11 +83,14 @@ function AppRoutes() {
                 </ProtectedRoute>
               }
             />
-            {/* <Route path="imports" element={
-              <ProtectedRoute adminOnly>
-                <ImportPage />
-              </ProtectedRoute>
-            } /> */}
+            <Route
+              path="imports"
+              element={
+                <ProtectedRoute adminOnly>
+                  <ImportPage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
 
           {/* Redirect root to appropriate dashboard */}
