@@ -12,6 +12,9 @@ type StorageType = "localStorage" | "sessionStorage" | "memory";
 
 const STORAGE_TYPE: StorageType =
   (import.meta.env.VITE_TOKEN_STORAGE as StorageType) || "localStorage";
+// Development-only override token. Set VITE_DEV_AUTH_TOKEN in your env to
+// automatically authenticate the frontend during local development.
+const DEV_AUTH_TOKEN = (import.meta.env.VITE_DEV_AUTH_TOKEN as string) || null;
 
 interface TokenStorage {
   get(): string | null;
@@ -102,6 +105,11 @@ export const authService = {
    * Get current token
    */
   getToken(): string | null {
+    // Prefer explicit dev override for quick local testing
+    if (DEV_AUTH_TOKEN && DEV_AUTH_TOKEN.split(".").length === 3) {
+      return DEV_AUTH_TOKEN;
+    }
+
     const token = tokenStorage.get();
     if (!token || token.split(".").length !== 3) return null;
     return token;

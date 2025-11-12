@@ -22,9 +22,21 @@ module Api
           if params[:overview] == "true"
             render_overview(users)
           else
+            # JSON:API serializer returns a nested shape ({ data: [ { id, attributes } ] })
+            # Convert to a flat array of attribute hashes with id included so the
+            # frontend can consume a consistent, simple shape:
+            # { users: [ { id, full_name, ... }, ... ], pagination: { ... } }
+            serialized = UserSerializer.new(users).serializable_hash
+            flat_users = Array(serialized[:data]).map do |resource|
+              attrs = resource[:attributes] || {}
+              attrs.merge(id: resource[:id].to_i)
+            end
+
             render json: {
-              users: UserSerializer.new(users).serializable_hash,
-              pagination: pagination_meta(users)
+              data: {
+                users: flat_users,
+                pagination: pagination_meta(users)
+              }
             }
           end
         end
@@ -33,7 +45,12 @@ module Api
         # Returns details for a specific user
         def show
           authorize @user
-          render json: UserSerializer.new(@user).serializable_hash
+          # Return a flat user object under `data` so the frontend receives
+          # { data: { id: ..., full_name: ..., email: ... } }
+          serialized = UserSerializer.new(@user).serializable_hash
+          resource = serialized[:data] || {}
+          attrs = (resource[:attributes] || {}).merge(id: resource[:id]&.to_i)
+          render json: { data: attrs }
         end
 
         # POST /api/v1/admin/users
@@ -50,7 +67,10 @@ module Api
 
           if user.save
             # UserMailer.with(user: user, temp_password: user.password).welcome_email.deliver_later
-            render json: UserSerializer.new(user).serializable_hash, status: :created
+            serialized = UserSerializer.new(user).serializable_hash
+            resource = serialized[:data] || {}
+            attrs = (resource[:attributes] || {}).merge(id: resource[:id]&.to_i)
+            render json: { data: attrs }, status: :created
           else
             render json: { errors: user.errors.full_messages }, status: :unprocessable_content
           end
@@ -68,7 +88,10 @@ module Api
           end
 
           if @user.update(admin_user_params)
-            render json: UserSerializer.new(@user).serializable_hash
+            serialized = UserSerializer.new(@user).serializable_hash
+            resource = serialized[:data] || {}
+            attrs = (resource[:attributes] || {}).merge(id: resource[:id]&.to_i)
+            render json: { data: attrs }
           else
             render json: { errors: @user.errors.full_messages }, status: :unprocessable_content
           end
@@ -95,7 +118,10 @@ module Api
 
           new_role = @user.admin? ? "user" : "admin"
           if @user.update(role: new_role)
-            render json: UserSerializer.new(@user).serializable_hash
+            serialized = UserSerializer.new(@user).serializable_hash
+            resource = serialized[:data] || {}
+            attrs = (resource[:attributes] || {}).merge(id: resource[:id]&.to_i)
+            render json: { data: attrs }
           else
             render json: { errors: @user.errors.full_messages }, status: :unprocessable_content
           end

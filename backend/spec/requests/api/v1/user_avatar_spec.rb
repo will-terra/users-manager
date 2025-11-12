@@ -57,7 +57,7 @@ RSpec.describe 'User Avatar API', type: :request do
 
       expect(response).to have_http_status(:ok)
       json_response = JSON.parse(response.body)
-      expect(json_response['data']['attributes']['has_avatar']).to be true
+      expect(json_response['data']['has_avatar']).to be true
     end
   end
 end

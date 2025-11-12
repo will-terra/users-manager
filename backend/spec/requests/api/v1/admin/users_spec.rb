@@ -15,11 +15,11 @@ RSpec.describe 'Api::V1::Admin::Users', type: :request do
         get '/api/v1/admin/users',
             headers: { 'Authorization' => admin_token }
 
-        expect(response).to have_http_status(:ok)
-        json_response = JSON.parse(response.body)
-        expect(json_response['users']['data'].count).to eq(19) # 15 users + 3 admins + 1 admin making request
-        expect(json_response['pagination']).to be_present
-        expect(json_response['pagination']['total_count']).to eq(19) # 15 users + 3 admins + 1 admin making request
+  expect(response).to have_http_status(:ok)
+  json_response = JSON.parse(response.body)
+  expect(json_response['data']['users'].count).to eq(19) # 15 users + 3 admins + 1 admin making request
+  expect(json_response['data']['pagination']).to be_present
+  expect(json_response['data']['pagination']['total_count']).to eq(19) # 15 users + 3 admins + 1 admin making request
       end
 
       it 'returns overview when overview=true' do
@@ -39,20 +39,20 @@ RSpec.describe 'Api::V1::Admin::Users', type: :request do
             params: { role: 'admin' },
             headers: { 'Authorization' => admin_token }
 
-        json_response = JSON.parse(response.body)
-        expect(json_response['users']['data'].count).to eq(4) # All admins
+  json_response = JSON.parse(response.body)
+  expect(json_response['data']['users'].count).to eq(4) # All admins
       end
 
       it 'searches users by name or email' do
-        user = create(:user, full_name: 'Zebediah Xylophones', email: 'zebediah.unique@example.com')
+  _user = create(:user, full_name: 'Zebediah Xylophones', email: 'zebediah.unique@example.com')
 
         get '/api/v1/admin/users',
             params: { search: 'Zebediah' },
             headers: { 'Authorization' => admin_token }
 
-        json_response = JSON.parse(response.body)
-        expect(json_response['users']['data'].count).to eq(1)
-        expect(json_response['users']['data'][0]['attributes']['full_name']).to eq('Zebediah Xylophones')
+  json_response = JSON.parse(response.body)
+  expect(json_response['data']['users'].count).to eq(1)
+  expect(json_response['data']['users'][0]['full_name']).to eq('Zebediah Xylophones')
       end
     end
 
@@ -90,8 +90,8 @@ RSpec.describe 'Api::V1::Admin::Users', type: :request do
 
         expect(response).to have_http_status(:created)
         json_response = JSON.parse(response.body)
-        expect(json_response['data']['attributes']['email']).to eq('newuser@example.com')
-        expect(json_response['data']['attributes']['role']).to eq('user')
+  expect(json_response['data']['email']).to eq('newuser@example.com')
+  expect(json_response['data']['role']).to eq('user')
       end
 
       it 'returns error when password is missing' do
@@ -133,8 +133,8 @@ RSpec.describe 'Api::V1::Admin::Users', type: :request do
 
         expect(response).to have_http_status(:ok)
         json_response = JSON.parse(response.body)
-        expect(json_response['data']['attributes']['full_name']).to eq('Updated Name')
-        expect(json_response['data']['attributes']['role']).to eq('admin')
+  expect(json_response['data']['full_name']).to eq('Updated Name')
+  expect(json_response['data']['role']).to eq('admin')
       end
 
       it 'updates user password' do
@@ -181,7 +181,7 @@ RSpec.describe 'Api::V1::Admin::Users', type: :request do
 
         expect(response).to have_http_status(:ok)
         json_response = JSON.parse(response.body)
-        expect(json_response['data']['attributes']['role']).to eq('admin')
+  expect(json_response['data']['role']).to eq('admin')
       end
 
       it 'toggles admin to user' do
@@ -191,7 +191,7 @@ RSpec.describe 'Api::V1::Admin::Users', type: :request do
 
         expect(response).to have_http_status(:ok)
         json_response = JSON.parse(response.body)
-        expect(json_response['data']['attributes']['role']).to eq('user')
+  expect(json_response['data']['role']).to eq('user')
       end
 
       it 'prevents self-role-toggle' do
