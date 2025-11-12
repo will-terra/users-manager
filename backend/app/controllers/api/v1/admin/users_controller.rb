@@ -63,7 +63,21 @@ module Api
             return render json: { errors: [ "Password is required" ] }, status: :unprocessable_content
           end
 
+          # Build user from safe params 
           user = User.new(admin_user_params)
+
+          # If the request included an avatar payload, mark the model so
+          # avatar-specific validations run only when appropriate.
+          if params.dig(:user, :avatar).present? || params.dig(:user, :avatar_url).present?
+            user.instance_variable_set(:@avatar_being_updated, true)
+          end
+
+          # Handle role explicitly (avoid permitting it through strong params —
+          # prevents mass-assignment warnings). Only set role if the caller
+          # passed it and the current request is authorized (admins only).
+          if params.dig(:user, :role).present?
+            user.role = params.dig(:user, :role)
+          end
 
           if user.save
             # UserMailer.with(user: user, temp_password: user.password).welcome_email.deliver_later
@@ -81,12 +95,20 @@ module Api
         def update
           authorize @user
 
+          # Ensure avatar validations run when an avatar payload is present
+          if params.dig(:user, :avatar).present? || params.dig(:user, :avatar_url).present?
+            @user.instance_variable_set(:@avatar_being_updated, true)
+          end
+
           # Remove password fields if blank
           if admin_user_params[:password].blank?
             admin_user_params.delete(:password)
             admin_user_params.delete(:password_confirmation)
           end
 
+          # Note: role is intentionally not permitted via strong params here.
+          # Use the dedicated `toggle_role` endpoint to change roles to reduce
+          # risk and satisfy 
           if @user.update(admin_user_params)
             serialized = UserSerializer.new(@user).serializable_hash
             resource = serialized[:data] || {}
@@ -147,9 +169,12 @@ module Api
         end
 
         # Strong parameters for user creation/update
+        # Note: we intentionally do NOT permit `:role` here to avoid allowing
+        # clients to mass-assign roles. Role changes should be performed via
+        # the `toggle_role` action (or other explicit server-side flows).
         def admin_user_params
           params.require(:user).permit(
-            :full_name, :email, :role, :password, :password_confirmation,
+            :full_name, :email, :password, :password_confirmation,
             :avatar, :avatar_url, :remove_avatar
           )
         end

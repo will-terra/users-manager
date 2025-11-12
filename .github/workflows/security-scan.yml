@@ -1,0 +1,40 @@
+name: Security scan
+
+on:
+  push:
+    branches: [master, development]
+  pull_request:
+    branches: [master, development]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: apt-get update -qq && apt-get install -y --no-install-recommends jq
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          # Use a flexible Ruby version; change if your project requires a specific one
+          ruby-version: '3.x'
+          bundler-cache: true
+
+      - name: Setup Node.js and pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Enable corepack (pnpm)
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate || true
+
+      - name: Run security scan script
+        run: |
+          chmod +x ./scripts/security/scan.sh
+          ./scripts/security/scan.sh

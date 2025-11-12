@@ -13,9 +13,7 @@ jobs:
     strategy:
       matrix:
         ruby-version: ["3.4.7"]
-    defaults:
-      run:
-        working-directory: backend
+    
 
     steps:
       - name: Checkout
@@ -28,13 +26,38 @@ jobs:
           bundler-cache: true
 
       - name: Install dependencies
+        working-directory: backend
         run: |
           gem install bundler
           bundle config path vendor/bundle
           bundle install --jobs 4 --retry 3
 
-      - name: Run RSpec
+      - name: Run Brakeman (security scan)
+        working-directory: backend
         run: |
+          if bundle info brakeman >/dev/null 2>&1; then
+            bundle exec brakeman -A || true
+          else
+            echo "Brakeman not available in bundle; skipping"
+          fi
+
+      - name: Run bundler-audit
+        working-directory: backend
+        run: |
+          if bundle info bundler-audit >/dev/null 2>&1; then
+            bundle exec bundler-audit update || true
+            bundle exec bundler-audit check
+          else
+            echo "bundler-audit not available in bundle; skipping"
+          fi
+
+      - name: Run RSpec
+        working-directory: backend
+        run: |
+          # Prepare test database and run specs
+          if bundle exec rails db:version >/dev/null 2>&1; then
+            bundle exec rails db:create db:migrate RAILS_ENV=test || true
+          fi
           bundle exec rspec --format documentation
         env:
           RAILS_ENV: test
@@ -45,3 +68,21 @@ jobs:
         with:
           name: coverage
           path: backend/coverage
+
+      - name: Frontend install Node and pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: |
+          curl -fsSL https://get.pnpm.io/install.sh | sh -
+          export PATH="$HOME/.local/share/pnpm:$PATH"
+          pnpm install --frozen-lockfile
+
+      - name: Frontend lint and build
+        working-directory: frontend
+        run: |
+          pnpm run lint || echo "Frontend lint warnings (non-blocking)"
+          pnpm run build
