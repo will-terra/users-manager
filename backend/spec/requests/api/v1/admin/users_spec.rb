@@ -126,16 +126,17 @@ RSpec.describe 'Api::V1::Admin::Users', type: :request do
     let(:user) { create(:user) }
 
     context 'as admin' do
-      it 'updates user attributes' do
-        patch "/api/v1/admin/users/#{user.id}",
-              params: { user: { full_name: 'Updated Name', role: 'admin' } },
-              headers: { 'Authorization' => admin_token }
+  it 'updates user attributes' do
+    patch "/api/v1/admin/users/#{user.id}",
+      params: { user: { full_name: 'Updated Name' } },
+      headers: { 'Authorization' => admin_token }
 
-        expect(response).to have_http_status(:ok)
-        json_response = JSON.parse(response.body)
+    expect(response).to have_http_status(:ok)
+    json_response = JSON.parse(response.body)
   expect(json_response['data']['full_name']).to eq('Updated Name')
-  expect(json_response['data']['role']).to eq('admin')
-      end
+  # Role is not permitted via strong params; use toggle_role endpoint instead
+  expect(json_response['data']['role']).to eq('user')
+  end
 
       it 'updates user password' do
         patch "/api/v1/admin/users/#{user.id}",
