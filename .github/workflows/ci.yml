@@ -41,28 +41,14 @@ jobs:
           bundle config path vendor/bundle
           bundle install --jobs 4 --retry 3
 
-      - name: Run Brakeman (security scan)
-        working-directory: backend
-        run: |
-          if bundle info brakeman >/dev/null 2>&1; then
-            bundle exec brakeman -A || true
-          else
-            echo "Brakeman not available in bundle; skipping"
-          fi
-
-      - name: Run bundler-audit
-        working-directory: backend
-        run: |
-          if bundle info bundler-audit >/dev/null 2>&1; then
-            bundle exec bundler-audit update || true
-            bundle exec bundler-audit check
-          else
-            echo "bundler-audit not available in bundle; skipping"
-          fi
 
       - name: Run RSpec
         working-directory: backend
         run: |
+          # Wait for Postgres TCP port to be open (pure-bash probe using /dev/tcp)
+          # This doesn't require the postgres client utilities to be installed.
+          until bash -c '</dev/tcp/postgres/5432' >/dev/null 2>&1; do sleep 1; done
+
           # Prepare test database and run specs
           if bundle exec rails db:version >/dev/null 2>&1; then
             bundle exec rails db:create db:migrate RAILS_ENV=test || true
@@ -70,12 +56,10 @@ jobs:
           bundle exec rspec --format documentation
         env:
           RAILS_ENV: test
-          # Use TCP connection to the postgres service started by the job
-          # Use the service hostname `postgres` (internal network) instead of binding
-          # the container port to the host. This avoids host port conflicts when
-          # GitHub Actions creates service containers.
+          # Use the service hostname provided by GitHub Actions services
           DATABASE_URL: postgresql://postgres:password@postgres:5432/backend_test
 
+          
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v4

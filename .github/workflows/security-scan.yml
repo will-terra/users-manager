@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install jq
-        run: apt-get update -qq && apt-get install -y --no-install-recommends jq
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends jq
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -38,52 +38,3 @@ jobs:
         run: |
           chmod +x ./scripts/security/scan.sh
           ./scripts/security/scan.sh
-
-  rspec:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: backend_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d backend_test" \
-          --health-interval 10s --health-timeout 5s --health-retries 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.x'
-          bundler-cache: true
-
-      - name: Install dependencies
-        run: |
-          bundle config set --local deployment 'false'
-          bundle install --jobs 4 --retry 3
-
-      - name: Wait for Postgres
-        run: |
-          until pg_isready -h 127.0.0.1 -p 5432 -U postgres; do sleep 1; done
-        env:
-          PGPASSWORD: password
-
-      - name: Prepare test database
-        env:
-          RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:password@127.0.0.1:5432/backend_test
-        run: |
-          bundle exec rails db:prepare
-
-      - name: Run RSpec
-        env:
-          RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:password@127.0.0.1:5432/backend_test
-        run: |
-          bundle exec rspec
