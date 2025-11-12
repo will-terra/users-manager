@@ -181,6 +181,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_08_172103) do
     t.text "error_message"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "generated_passwords"
     t.index ["user_id"], name: "index_user_imports_on_user_id"
   end
 

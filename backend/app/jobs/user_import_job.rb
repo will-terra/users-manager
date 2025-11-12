@@ -61,13 +61,19 @@ class UserImportJob < ApplicationJob
     successful_imports = 0
     failed_imports = 0
     errors = []
+    generated_passwords = {}
 
     rows.each_slice(BATCH_SIZE).with_index do |batch, batch_index|
       batch.each_with_index do |row, index_in_batch|
         global_index = (batch_index * BATCH_SIZE) + index_in_batch
 
         begin
-          create_user_from_row(row)
+          created_password = create_user_from_row(row)
+          # If a password was generated or provided for a new user, record it
+          if created_password.present?
+            # Use the email as key to look up later
+            generated_passwords[(row["email"] || row["Email"] || row["E-mail"]).to_s] = created_password
+          end
           successful_imports += 1
         rescue => e
           failed_imports += 1
@@ -86,9 +92,14 @@ class UserImportJob < ApplicationJob
       progress: rows.size,
       error_message: errors.any? ? "Completed with #{failed_imports} errors. First few: #{errors.first(3).join('; ')}" : nil
     )
+    # Persist generated passwords map for admin visibility (if any)
+    if generated_passwords.any?
+      @user_import.update(generated_passwords: generated_passwords)
+    end
   end
 
-  # Create a user from a single CSV/Excel row with validation
+  # Create or update a user from a single CSV/Excel row with validation
+  # Returns a password string if a password was generated/provided for a new user
   def create_user_from_row(row)
     user_attributes = {
       full_name: row["full_name"] || row["name"] || row["Full Name"] || row["Nome Completo"],
@@ -100,20 +111,36 @@ class UserImportJob < ApplicationJob
     raise "Email is required" if user_attributes[:email].blank?
     raise "Invalid email format" unless URI::MailTo::EMAIL_REGEXP.match?(user_attributes[:email])
 
-    raise "Email already exists: #{user_attributes[:email]}" if User.exists?(email: user_attributes[:email])
+    # Find existing user by email or initialize a new one
+    user = User.find_or_initialize_by(email: user_attributes[:email])
 
-    password = row["password"] || SecureRandom.hex(8)
+    # Update attributes (email remains the same)
+    user.full_name = user_attributes[:full_name]
+    user.role = user_attributes[:role]
 
-    user = User.new(user_attributes.merge(
-      password: password,
-      password_confirmation: password
-    ))
+    # Handle password: use CSV password if provided, or generate for new users
+    csv_password = row["password"] || row["Password"]
+    password_to_return = nil
+    if csv_password.present?
+      # Update password if explicitly provided in CSV
+      user.password = csv_password
+      user.password_confirmation = csv_password
+      password_to_return = csv_password if user.new_record? || user.persisted?
+    elsif user.new_record?
+      # Generate password only for new users when not provided
+      password = SecureRandom.hex(8)
+      user.password = password
+      user.password_confirmation = password
+      password_to_return = password
+    end
 
+    # Handle avatar URL if provided
     if row["avatar_url"].present?
       user.avatar_url = row["avatar_url"]
     end
 
     user.save!
+    password_to_return
   end
 
   # Broadcast initial import started event to subscribers

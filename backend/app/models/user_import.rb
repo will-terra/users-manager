@@ -4,6 +4,11 @@ class UserImport < ApplicationRecord
   belongs_to :user
   has_one_attached :file
 
+  # Use a JSON-typed attribute with a default empty hash and enable
+  # Active Record encryption so generated passwords are stored encrypted
+  attribute :generated_passwords, :json, default: {}
+  encrypts :generated_passwords
+
   # Valid import statuses throughout the import lifecycle
   STATUSES = %w[pending processing completed failed].freeze
 
@@ -46,6 +51,18 @@ class UserImport < ApplicationRecord
   def percentage
     return 0 if total_rows.zero?
     (progress.to_f / total_rows * 100).round
+  end
+
+  # Override as_json to exclude generated_passwords by default
+  # This prevents accidental leakage if someone uses `render json: user_import`
+  # without the dedicated serializer. To explicitly include them, pass
+  # `include_generated_passwords: true` in the options hash.
+  def as_json(options = {})
+    opts = (options || {}).dup
+    unless opts.delete(:include_generated_passwords)
+      opts[:except] = Array(opts[:except]) + [ :generated_passwords ]
+    end
+    super(opts)
   end
 
   private

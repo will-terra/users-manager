@@ -34,6 +34,92 @@ RSpec.describe UserImportJob, type: :job do
     expect(ui.error_message).to be_present
     expect(ui.error_message).to match(/Email is required/)
   end
+
+  it 'updates existing user when email already exists' do
+    # Create an existing user
+    existing_user = create(:user, email: 'john@example.com', full_name: 'Old Name', role: 'user')
+
+    # Create CSV with the same email but different attributes
+    csv = "full_name,email,role\nJohn Updated,john@example.com,admin\n"
+    ui = create(:user_import)
+    ui.file.detach
+    ui.file.attach(io: StringIO.new(csv), filename: 'update.csv', content_type: 'text/csv')
+    ui.save!
+
+    # Should not create a new user, just update the existing one
+    expect { described_class.perform_now(ui.id) }.not_to change { User.count }
+
+    ui.reload
+    expect(ui.status).to eq('completed')
+
+    # Verify user was updated
+    existing_user.reload
+    expect(existing_user.full_name).to eq('John Updated')
+    expect(existing_user.role).to eq('admin')
+    expect(existing_user.email).to eq('john@example.com') # Email should remain the same
+  end
+
+  it 'updates password when provided in CSV for existing user' do
+    # Create an existing user with a known password
+    existing_user = create(:user, email: 'test@example.com', password: 'oldpassword123', password_confirmation: 'oldpassword123')
+    old_password_digest = existing_user.encrypted_password
+
+    # Create CSV with new password
+    csv = "full_name,email,password\nTest User,test@example.com,newpassword456\n"
+    ui = create(:user_import)
+    ui.file.detach
+    ui.file.attach(io: StringIO.new(csv), filename: 'password_update.csv', content_type: 'text/csv')
+    ui.save!
+
+    described_class.perform_now(ui.id)
+
+    ui.reload
+    expect(ui.status).to eq('completed')
+
+    # Verify password was updated
+    existing_user.reload
+    expect(existing_user.encrypted_password).not_to eq(old_password_digest)
+    expect(existing_user.valid_password?('newpassword456')).to be true
+  end
+
+  it 'does not update password for existing user when not provided in CSV' do
+    # Create an existing user with a known password
+    existing_user = create(:user, email: 'test2@example.com', password: 'mypassword123', password_confirmation: 'mypassword123')
+    old_password_digest = existing_user.encrypted_password
+
+    # Create CSV without password field
+    csv = "full_name,email,role\nTest User Updated,test2@example.com,admin\n"
+    ui = create(:user_import)
+    ui.file.detach
+    ui.file.attach(io: StringIO.new(csv), filename: 'no_password_update.csv', content_type: 'text/csv')
+    ui.save!
+
+    described_class.perform_now(ui.id)
+
+    ui.reload
+    expect(ui.status).to eq('completed')
+
+    # Verify password was NOT updated
+    existing_user.reload
+    expect(existing_user.encrypted_password).to eq(old_password_digest)
+    expect(existing_user.valid_password?('mypassword123')).to be true
+  end
+
+  it 'stores generated passwords for new users on the UserImport record' do
+    # CSV with a new user without password -> should generate one
+    csv = "full_name,email\nGenerated User,gen@example.com\n"
+    ui = create(:user_import)
+    ui.file.detach
+    ui.file.attach(io: StringIO.new(csv), filename: 'gen_pass.csv', content_type: 'text/csv')
+    ui.save!
+
+    described_class.perform_now(ui.id)
+
+    ui.reload
+    expect(ui.status).to eq('completed')
+    expect(ui.generated_passwords).to be_present
+    expect(ui.generated_passwords['gen@example.com']).to be_present
+  end
 end
 require 'rails_helper'
 
