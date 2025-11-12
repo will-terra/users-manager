@@ -38,11 +38,25 @@ module Api
 
       # DELETE /api/v1/sessions
       # For stateless JWT authentication, logout is normally handled on the
-      # client by deleting the stored token. If you need server-side
-      # invalidation (a token blacklist), implement that logic here (e.g.
-      # create a blacklist record for the token or its jti claim).
+      # client by deleting the stored token. We also blacklist the token
+      # on the server to prevent reuse.
       def destroy
-        # JWT logout is handled client-side by discarding the token
+        # Extract and blacklist the current JWT token
+        if current_user && request.headers["Authorization"].present?
+          token = request.headers["Authorization"].split(" ").last
+          begin
+            payload = JWT.decode(
+              token,
+              Rails.application.credentials.devise_jwt_secret_key,
+              true,
+              { algorithm: "HS256" }
+            ).first
+            JWTBlacklist.revoke_jwt(payload, current_user)
+          rescue JWT::DecodeError => e
+            Rails.logger.warn("Failed to decode JWT during logout: #{e.message}")
+          end
+        end
+
         render_success(nil, status: :no_content)
       end
 

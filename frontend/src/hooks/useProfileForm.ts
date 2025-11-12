@@ -16,13 +16,15 @@ import type {
  */
 export const useProfileForm = ({
   currentUser,
-  updateProfile,
+  updateProfileMutation,
   onSuccess,
   onError,
 }: UseProfileFormProps): UseProfileFormReturn => {
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+
+  // Use mutation's loading state
+  const loading = updateProfileMutation.isPending;
 
   // Initialize form data from current user
   const getInitialFormData = (): ProfileFormData => ({
@@ -85,7 +87,6 @@ export const useProfileForm = ({
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setLocalError(null);
 
     try {
@@ -113,7 +114,7 @@ export const useProfileForm = ({
         return;
       }
 
-      await updateProfile(updateData);
+      await updateProfileMutation.mutateAsync(updateData);
 
       // Reset form to clean state after successful update
       setFormData({
@@ -129,8 +130,6 @@ export const useProfileForm = ({
       const errorMessage = err instanceof Error ? err.message : String(err);
       setLocalError(errorMessage);
       onError?.(errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
 

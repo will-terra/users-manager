@@ -1,3 +1,4 @@
+import type { UseMutationResult } from "@tanstack/react-query";
 import type { User } from "./user";
 
 export interface ProfileFormData {
@@ -10,7 +11,20 @@ export interface ProfileFormData {
 
 export interface UseProfileFormProps {
   currentUser: User | null;
-  updateProfile: (data: ProfileUpdatePayload) => Promise<void>;
+  /**
+   * TanStack Query mutation result returned by `useUpdateProfile()`.
+   * The hook will call `mutateAsync` on this mutation.
+   */
+  updateProfileMutation: UseMutationResult<
+    { data: User },
+    unknown,
+    Partial<User> & {
+      avatar?: File;
+      avatar_url?: string;
+      remove_avatar?: boolean;
+    },
+    unknown
+  >;
   onSuccess?: () => void;
   onError?: (error: string) => void;
 }

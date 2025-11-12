@@ -41,6 +41,15 @@ module Api
       # Updates attributes permitted by `user_params`. Authorization is enforced.
       def update
         authorize @user
+        # Mark the user when an avatar payload is present so model validations
+        # that check avatar dimensions only run when a new avatar is being
+        # attached or when a remote URL is being processed. This prevents
+        # unrelated updates (e.g. changing full_name) from failing due to an
+        # existing avatar that might violate dimension rules.
+        if params.dig(:user, :avatar).present? || params.dig(:user, :avatar_url).present?
+          @user.instance_variable_set(:@avatar_being_updated, true)
+        end
+
         if @user.update(user_params)
           render json: UserSerializer.new(@user).serializable_hash
         else
@@ -56,6 +65,10 @@ module Api
       # profile (including uploading an avatar file).
       def profile_update
         authorize current_user, :update?
+        if params.dig(:user, :avatar).present? || params.dig(:user, :avatar_url).present?
+          current_user.instance_variable_set(:@avatar_being_updated, true)
+        end
+
         if current_user.update(user_params)
           render json: { data: UserSerializer.new(current_user).serializable_hash[:data][:attributes] }
         else

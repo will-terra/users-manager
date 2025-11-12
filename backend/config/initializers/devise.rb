@@ -47,9 +47,10 @@ Devise.setup do |config|
       [ "POST", %r{^/api/v1/sign_in$} ],
       [ "POST", %r{^/api/v1/sign_up$} ]
     ]
-    jwt.revocation_requests = [
-      [ "DELETE", %r{^/api/v1/sign_out$} ]
-    ]
+    # Revocation is handled manually in the controller, not via middleware
+    # jwt.revocation_requests = [
+    #   [ "DELETE", %r{^/api/v1/sign_out$} ]
+    # ]
     jwt.expiration_time = 15.minutes.to_i
   end
 

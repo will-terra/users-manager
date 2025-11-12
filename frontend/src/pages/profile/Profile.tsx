@@ -1,5 +1,6 @@
 import React from "react";
 import { NotificationBanner } from "../../components/NotificationBanner";
+import { useProfile, useUpdateProfile } from "../../hooks/queries";
 import { useAuth } from "../../hooks/useAuth";
 import { useProfileForm } from "../../hooks/useProfileForm";
 import { ProfileAvatar } from "./components/ProfileAvatar";
@@ -9,14 +10,18 @@ import "./Profile.scss";
 
 export const Profile: React.FC = () => {
   const {
-    currentUser,
-    updateProfile,
     globalError,
     globalSuccess,
     setGlobalError,
     setGlobalSuccess,
     clearNotifications,
+    refreshUser,
   } = useAuth();
+
+  const { data: profileResp, isLoading } = useProfile();
+  const currentUser = profileResp?.data ?? null;
+
+  const updateProfileMutation = useUpdateProfile();
 
   const {
     isEditing,
@@ -30,8 +35,13 @@ export const Profile: React.FC = () => {
     handleRemoveAvatar,
   } = useProfileForm({
     currentUser,
-    updateProfile,
-    onSuccess: () => {
+    updateProfileMutation,
+    onSuccess: async () => {
+      try {
+        await refreshUser();
+      } catch {
+        // ignore
+      }
       setGlobalSuccess("Profile updated successfully!");
       setIsEditing(false);
     },
@@ -40,7 +50,7 @@ export const Profile: React.FC = () => {
     },
   });
 
-  if (!currentUser) {
+  if (isLoading || !currentUser) {
     return (
       <div className="profile-page">
         <div className="loading" role="status" aria-live="polite">

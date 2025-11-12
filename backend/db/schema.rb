@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_08_172103) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_12_183000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -174,7 +174,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_08_172103) do
   end
 
   create_table "user_imports", force: :cascade do |t|
-    t.bigint "user_id", null: false
+    t.bigint "user_id"
     t.string "status", default: "pending", null: false
     t.integer "progress", default: 0
     t.integer "total_rows", default: 0
@@ -214,5 +214,5 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_08_172103) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
-  add_foreign_key "user_imports", "users"
+  add_foreign_key "user_imports", "users", on_delete: :nullify
 end

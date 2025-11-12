@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { adminApi } from "../../../services/api";
+import { useCreateUser, useUpdateUser } from "../../../hooks/queries";
+import { useAuth } from "../../../hooks/useAuth";
 import type { User } from "../../../types/user";
 import "./UserForm.scss";
 
@@ -21,8 +22,13 @@ export const UserForm: React.FC<UserFormProps> = ({
     password: "",
   });
   const [avatar, setAvatar] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const createUserMutation = useCreateUser();
+  const updateUserMutation = useUpdateUser(user?.id || 0);
+  const { currentUser } = useAuth();
+
+  const loading = createUserMutation.isPending || updateUserMutation.isPending;
 
   useEffect(() => {
     if (user) {
@@ -50,11 +56,9 @@ export const UserForm: React.FC<UserFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
     try {
-      let savedUser: User;
       if (user) {
         // Update
         const updateData = {
@@ -63,23 +67,20 @@ export const UserForm: React.FC<UserFormProps> = ({
           role: formData.role,
           ...(avatar && { avatar }),
         };
-        const response = await adminApi.updateUser(user.id, updateData);
-        savedUser = response.data;
+        const response = await updateUserMutation.mutateAsync(updateData);
+        onSave(response.data);
       } else {
         // Create
         const createData = {
           ...formData,
           ...(avatar && { avatar }),
         };
-        const response = await adminApi.createUser(createData);
-        savedUser = response.data;
+        const response = await createUserMutation.mutateAsync(createData);
+        onSave(response.data);
       }
-      onSave(savedUser);
     } catch (err) {
-      setError("Failed to save user");
+      setError((err as Error).message || "Failed to save user");
       console.error("Save user error:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -115,11 +116,13 @@ export const UserForm: React.FC<UserFormProps> = ({
 
         <div className="form-group">
           <label htmlFor="role">Role</label>
+
           <select
             id="role"
             name="role"
             value={formData.role}
             onChange={handleInputChange}
+            disabled={user && currentUser?.id === user.id}
           >
             <option value="user">User</option>
             <option value="admin">Admin</option>

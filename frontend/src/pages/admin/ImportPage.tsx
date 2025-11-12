@@ -1,13 +1,12 @@
 import React, { useState } from "react";
+import { useCreateImport } from "../../hooks/queries";
 import { useAuth } from "../../hooks/useAuth";
 import { useImports } from "../../hooks/useImports";
-import { adminApi } from "../../services/api";
 import { ImportProgress } from "./components/ImportProgress";
 import "./ImportPage.scss";
 
 export const ImportPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
   const {
     token,
     globalError,
@@ -17,6 +16,7 @@ export const ImportPage: React.FC = () => {
   } = useAuth();
 
   const { importsMap, refreshImports, dismissImport } = useImports(token);
+  const createImportMutation = useCreateImport();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFile(e.target.files && e.target.files[0] ? e.target.files[0] : null);
@@ -32,20 +32,18 @@ export const ImportPage: React.FC = () => {
       return;
     }
 
-    setLoading(true);
     try {
-      await adminApi.createImport(file);
-
+      await createImportMutation.mutateAsync(file);
       await refreshImports();
-
       setGlobalSuccess("Import started successfully.");
+      setFile(null);
     } catch (err) {
       const errorObj = err as Error;
       setGlobalError(errorObj.message || "Import failed");
-    } finally {
-      setLoading(false);
     }
   };
+
+  const loading = createImportMutation.isPending;
 
   return (
     <div className="import-page">
@@ -71,6 +69,7 @@ export const ImportPage: React.FC = () => {
               accept=",.csv,text/csv"
               onChange={handleFileChange}
               disabled={loading}
+              value=""
             />
           </div>
 

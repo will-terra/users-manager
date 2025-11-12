@@ -1,7 +1,10 @@
 # Model to track bulk user import operations from CSV/Excel files
 # Manages import status, progress tracking, and file attachments
 class UserImport < ApplicationRecord
-  belongs_to :user
+  # The user who started the import. Make this optional so that imports
+  # remain in the database for auditing even if the originating user is
+  # later deleted (we nullify the user_id via FK ON DELETE SET NULL).
+  belongs_to :user, optional: true
   has_one_attached :file
 
   # Use a JSON-typed attribute with a default empty hash and enable

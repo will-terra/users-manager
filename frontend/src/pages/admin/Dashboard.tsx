@@ -1,13 +1,11 @@
 import React from "react";
-import { useAdminStats } from "../../hooks/useAdminStats";
-import { useAuth } from "../../hooks/useAuth";
+import { useAdminStats } from "../../hooks/queries";
 import { RealTimeIndicators } from "./components/RealTimeIndicators";
 import { StatsCards } from "./components/StatsCards";
 import "./Dashboard.scss";
 
 export const AdminDashboard: React.FC = () => {
-  const { token } = useAuth();
-  const { stats, loading, error, refreshStats } = useAdminStats(token || "");
+  const { data, isLoading, error, refetch } = useAdminStats();
 
   return (
     <div className="admin-dashboard">
@@ -17,10 +15,10 @@ export const AdminDashboard: React.FC = () => {
       <RealTimeIndicators />
       {error && (
         <div className="error-banner">
-          {error.message} <button onClick={refreshStats}>Try Again</button>
+          {error.message} <button onClick={() => refetch()}>Try Again</button>
         </div>
       )}
-      <StatsCards stats={stats} loading={loading} />
+      <StatsCards stats={data?.stats ?? null} loading={isLoading} />
     </div>
   );
 };

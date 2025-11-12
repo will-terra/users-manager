@@ -61,11 +61,21 @@ class User < ApplicationRecord
   # Avatar validations
   validate :avatar_content_type
   validate :avatar_size
-  validate :avatar_dimensions, if: -> { avatar.attached? && avatar.blob.persisted? }
+
+  # Only validate image dimensions when a new avatar is being attached or
+  # when processing a remote avatar URL. Validating dimensions on every
+  # save caused unrelated updates (e.g. changing name/email) to fail when an
+  # already-attached avatar exceeded the configured limits.
+  validate :avatar_dimensions, if: -> { avatar.attached? && avatar.blob.persisted? && should_validate_avatar_dimensions? }
 
   # Convenience scopes for querying by role
   scope :admins, -> { where(role: "admin") }
   scope :users, -> { where(role: "user") }
+
+  # Keep import records for auditing even if a user is deleted. We nullify
+  # the `user_id` on delete (DB-level ON DELETE SET NULL) and avoid removing
+  # the imports automatically; this preserves history.
+  has_many :user_imports, dependent: :nullify
 
   # Role predicate helpers used throughout the app/policies
   def admin?
@@ -85,10 +95,17 @@ class User < ApplicationRecord
         exp: 15.minutes.from_now.to_i,
         email: email,
         role: role,
-        full_name: full_name
+        full_name: full_name,
+        jti: SecureRandom.uuid
       },
       Rails.application.credentials.devise_jwt_secret_key
     )
+  end
+
+  # Devise JWT callback - called when a JWT is dispatched (user signs in)
+  # This allows us to track or modify the JWT payload if needed
+  def on_jwt_dispatch(token, payload)
+    # No additional action needed for now, but this callback must exist
   end
 
   # Public methods for avatar URLs
@@ -183,6 +200,17 @@ class User < ApplicationRecord
       # If image doesn't support variants, return original
       avatar_original_url
     end
+  end
+
+  # Determine whether to run the avatar dimensions validation. We only want
+  # to run this when an avatar is being changed in the current request
+  # (file upload via params or processing a supplied avatar_url). Controllers
+  # set @avatar_being_updated = true when they detect avatar/avatar_url in
+  # the incoming params. @processing_avatar_url is set during processing of
+  # the URL. This keeps dimension validation scoped to avatar updates.
+  def should_validate_avatar_dimensions?
+    return true if defined?(@processing_avatar_url) && @processing_avatar_url
+    defined?(@avatar_being_updated) && @avatar_being_updated
   end
 
   # Queue a job to broadcast updated user stats to admin dashboards/clients

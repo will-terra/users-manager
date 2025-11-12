@@ -17,13 +17,6 @@ interface AuthContextType {
   register: (payload: RegisterPayload) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
-  updateProfile: (
-    data: Partial<User> & {
-      avatar?: File;
-      avatar_url?: string;
-      remove_avatar?: boolean;
-    },
-  ) => Promise<void>;
   isLoading: boolean;
   // Global notifications (quick solution for persistent messages across remounts)
   globalError: string | null;
@@ -128,24 +121,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateProfile = async (
-    data: Partial<User> & {
-      avatar?: File;
-      avatar_url?: string;
-      remove_avatar?: boolean;
-    },
-  ) => {
-    setIsLoading(true);
-    try {
-      const response = await authApi.updateProfile(data);
-      setCurrentUser(response.data);
-      // Update stored user data
-      localStorage.setItem("currentUser", JSON.stringify(response.data));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const setGlobalErrorMsg = (msg: string | null) => {
     setGlobalError(msg);
   };
@@ -167,7 +142,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     refreshUser,
-    updateProfile,
     isLoading,
     globalError,
     globalSuccess,

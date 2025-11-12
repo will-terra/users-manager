@@ -1,7 +1,9 @@
 /**
  * Unified hook for managing import tracking and ActionCable subscriptions.
  * Handles fetching imports, real-time updates via websocket, and dismissed state.
+ * Now uses TanStack Query for better caching and state management.
  */
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../services/api";
 import { cableService } from "../services/cable";
@@ -11,10 +13,10 @@ const DISMISSED_IDS_KEY = "dismissed_import_ids";
 
 interface ImportUpdate {
   type:
-  | "import_started"
-  | "progress_update"
-  | "import_completed"
-  | "import_created";
+    | "import_started"
+    | "progress_update"
+    | "import_completed"
+    | "import_created";
   data: ImportProgress & { channel?: string };
 }
 
@@ -36,19 +38,12 @@ export const useImports = (
   token?: string | null,
   specificImportId?: number,
 ) => {
-  // In-memory map of imports (synced from API and websocket)
-  const [importsMap, setImportsMap] = useState<Map<number, ImportProgress>>(
-    new Map(),
-  );
+  const queryClient = useQueryClient();
 
   // Current import when watching a specific import
   const [currentImport, setCurrentImport] = useState<ImportProgress | null>(
     null,
   );
-
-  // Loading and error states
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Persisted set of dismissed import IDs
   const [dismissedIds, setDismissedIds] = useState<Set<number>>(() => {
@@ -75,59 +70,56 @@ export const useImports = (
     }
   }, [dismissedIds]);
 
+  // Use TanStack Query to fetch imports
+  const {
+    data: importsData,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: ["admin", "imports", 1],
+    queryFn: () => adminApi.getImports(1),
+    refetchInterval: 5000, // Auto-refetch every 5 seconds for real-time updates
+    refetchIntervalInBackground: true,
+  });
+
+  const error = queryError ? "Failed to fetch imports" : null;
+
+  // Convert imports array to Map, filtering out dismissed ones
+  const importsMap = new Map<number, ImportProgress>();
+  const imports = (importsData?.data?.imports as ImportProgress[]) || [];
+  imports.forEach((imp) => {
+    if (!dismissedIds.has(imp.id)) {
+      importsMap.set(imp.id, imp);
+    }
+  });
+
   /**
-   * Fetch imports list from the API
+   * Refresh imports (now just triggers refetch)
    */
   const refreshImports = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await adminApi.getImports();
-      const imports = response.data.imports as ImportProgress[];
-
-      // Update map, excluding dismissed imports
-      setImportsMap((prev) => {
-        const newMap = new Map(prev);
-        imports.forEach((imp) => {
-          if (!dismissedIds.has(imp.id)) {
-            newMap.set(imp.id, imp);
-          }
-        });
-        return newMap;
-      });
-
-      setError(null);
-    } catch {
-      setError("Failed to fetch imports");
-    } finally {
-      setLoading(false);
-    }
-  }, [dismissedIds]);
+    await refetch();
+  }, [refetch]);
 
   /**
    * Dismiss an import (removes from map and persists to localStorage)
    */
   const dismissImport = useCallback((importId: number) => {
     setDismissedIds((prev) => new Set(prev).add(importId));
-    setImportsMap((prev) => {
-      const newMap = new Map(prev);
-      newMap.delete(importId);
-      return newMap;
-    });
   }, []);
 
-  // Subscribe to import updates via ActionCable
+  // Subscribe to import updates via ActionCable for real-time updates
   useEffect(() => {
-    refreshImports();
+    if (!token) return;
 
     let consumer;
     try {
-      consumer = cableService.connect(token ?? undefined);
+      consumer = cableService.connect(token);
     } catch (err) {
-      setError(
+      console.error(
         err instanceof Error ? err.message : "Failed to connect to websocket",
       );
-      setLoading(false);
-      return () => { };
+      return () => {};
     }
 
     let subscription;
@@ -143,6 +135,10 @@ export const useImports = (
               case "progress_update":
               case "import_completed":
                 setCurrentImport(data.data);
+                // Invalidate query to refetch
+                queryClient.invalidateQueries({
+                  queryKey: ["admin", "imports"],
+                });
                 break;
             }
           },
@@ -154,30 +150,14 @@ export const useImports = (
         received: (data: ImportUpdate | ImportsListUpdate) => {
           switch (data.type) {
             case "import_created":
-              if (!dismissedIds.has(data.data.id)) {
-                setImportsMap((prev) => {
-                  const newMap = new Map(prev);
-                  newMap.set(data.data.id, data.data);
-                  return newMap;
-                });
-              }
-              break;
             case "progress_update":
             case "import_completed":
-              if (!dismissedIds.has(data.data.id)) {
-                setImportsMap((prev) => {
-                  const newMap = new Map(prev);
-                  const existing = newMap.get(data.data.id);
-                  if (existing) {
-                    newMap.set(data.data.id, { ...existing, ...data.data });
-                  } else {
-                    newMap.set(data.data.id, data.data);
-                  }
-                  return newMap;
-                });
-              }
+              // Invalidate query to trigger refetch on any import update
+              queryClient.invalidateQueries({ queryKey: ["admin", "imports"] });
               break;
             case "imports_list_updated":
+              // Invalidate query for list updates
+              queryClient.invalidateQueries({ queryKey: ["admin", "imports"] });
               break;
           }
         },
@@ -189,7 +169,7 @@ export const useImports = (
         subscription.unsubscribe();
       }
     };
-  }, [token, specificImportId, refreshImports, dismissedIds]);
+  }, [token, specificImportId, queryClient]);
 
   return {
     importsMap,

@@ -106,8 +106,20 @@ module Api
           if @user == current_user
             render json: { errors: [ "You cannot delete your own account" ] }, status: :unprocessable_content
           else
-            @user.destroy
-            head :no_content
+            begin
+              @user.destroy
+              head :no_content
+            rescue ActiveRecord::InvalidForeignKey => e
+              # Return a helpful error instead of letting the 500 bubble up.
+              # This typically means other records reference this user (FK
+              # constraint). Advise the client/admin what to do next.
+              Rails.logger.warn("Failed to delete user=#{@user.id}: #{e.message}")
+              render json: {
+                errors: [
+                  "Cannot delete user because related records exist (e.g. user_imports). Remove or reassign dependent records before deleting."
+                ]
+              }, status: :conflict
+            end
           end
         end
 

@@ -1,80 +1,60 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  useDeleteUser,
+  useToggleUserRole,
+  useUsers,
+} from "../../hooks/queries";
 import { useAuth } from "../../hooks/useAuth";
-import { adminApi } from "../../services/api";
-import type { User } from "../../types/user";
 import "./UsersPage.scss";
 
 export const UsersPage: React.FC = () => {
-  const { globalError, setGlobalError } = useAuth();
+  const { globalError, setGlobalError, currentUser } = useAuth();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const queryClient = useQueryClient();
+
   const {
     data,
     isLoading: loading,
     isError,
     error,
-  } = useQuery({
-    queryKey: ["users", currentPage, search],
-    queryFn: () =>
-      adminApi.getUsers(currentPage, search).then(
-        (res) =>
-          res?.data ?? {
-            users: [],
-            pagination: { current_page: 1, total_pages: 1, total_count: 0 },
-          },
-      ),
-  });
+  } = useUsers(currentPage, search);
+
   useEffect(() => {
     if (isError) {
       setGlobalError((error as Error)?.message || "Failed to load users");
     }
   }, [isError, error, setGlobalError]);
 
-  const users = (data?.users as User[]) || [];
-  const totalPages = data?.pagination?.total_pages ?? 1;
+  const users = data?.data?.users || [];
+  const totalPages = data?.data?.pagination?.total_pages ?? 1;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
   };
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => adminApi.deleteUser(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["users", currentPage, search],
-      });
-      setGlobalError(null);
-    },
-    onError: (err) =>
-      setGlobalError((err as Error)?.message || "Failed to delete user"),
-  });
-
-  const toggleRoleMutation = useMutation({
-    mutationFn: (id: number) => adminApi.toggleUserRole(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["users", currentPage, search],
-      });
-      setGlobalError(null);
-    },
-    onError: (err) =>
-      setGlobalError((err as Error)?.message || "Failed to toggle user role"),
-  });
+  const deleteMutation = useDeleteUser();
+  const toggleRoleMutation = useToggleUserRole();
 
   const handleDelete = (id: number) => {
     if (!window.confirm("Are you sure you want to delete this user?")) {
       return;
     }
 
-    deleteMutation.mutate(id);
+    deleteMutation.mutate(id, {
+      onSuccess: () => setGlobalError(null),
+      onError: (err) =>
+        setGlobalError((err as Error)?.message || "Failed to delete user"),
+    });
   };
 
   const handleToggleRole = (id: number) => {
-    toggleRoleMutation.mutate(id);
+    toggleRoleMutation.mutate(id, {
+      onSuccess: () => setGlobalError(null),
+      onError: (err) =>
+        setGlobalError((err as Error)?.message || "Failed to toggle user role"),
+    });
   };
 
   if (loading && users.length === 0) {
@@ -132,18 +112,22 @@ export const UsersPage: React.FC = () => {
                     >
                       Edit
                     </Link>
-                    <button
-                      onClick={() => handleToggleRole(user.id)}
-                      className="btn btn-sm btn-toggle"
-                    >
-                      Toggle Role
-                    </button>
-                    <button
-                      onClick={() => handleDelete(user.id)}
-                      className="btn btn-sm btn-delete"
-                    >
-                      Delete
-                    </button>
+                    {currentUser?.id !== user.id && (
+                      <>
+                        <button
+                          onClick={() => handleToggleRole(user.id)}
+                          className="btn btn-sm btn-toggle"
+                        >
+                          Toggle Role
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="btn btn-sm btn-delete"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}

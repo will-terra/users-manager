@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useAdminStats } from "../../../hooks/useAdminStats";
-import { useAuth } from "../../../hooks/useAuth";
+import { useAdminStats } from "../../../hooks/queries";
 import "./RealTimeIndicators.scss";
 
 export const RealTimeIndicators: React.FC = () => {
-  const { token } = useAuth();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const { refreshStats, lastUpdated } = useAdminStats(token || "");
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const { refetch } = useAdminStats();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -15,9 +14,15 @@ export const RealTimeIndicators: React.FC = () => {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
+    // Update lastUpdated timestamp periodically or on refetch
+    const interval = setInterval(() => {
+      setLastUpdated(new Date());
+    }, 60000); // Update every minute
+
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      clearInterval(interval);
     };
   }, []);
 
@@ -27,6 +32,11 @@ export const RealTimeIndicators: React.FC = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleRefresh = () => {
+    refetch();
+    setLastUpdated(new Date());
   };
 
   return (
@@ -44,7 +54,7 @@ export const RealTimeIndicators: React.FC = () => {
         <div className="pulse"></div>
         <span>LIVE</span>
       </div>
-      <button onClick={refreshStats} className="refresh-btn">
+      <button onClick={handleRefresh} className="refresh-btn">
         Refresh
       </button>
     </div>

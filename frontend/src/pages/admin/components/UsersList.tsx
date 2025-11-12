@@ -1,6 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
-import { adminApi } from "../../../services/api";
+import {
+  useDeleteUser,
+  useToggleUserRole,
+  useUsers,
+} from "../../../hooks/queries";
 import type { Pagination } from "../../../types/api";
 import type { User } from "../../../types/user";
 
@@ -16,33 +19,18 @@ export const UsersList: React.FC<UsersListProps> = ({
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const queryClient = useQueryClient();
 
-  const { data, isLoading: loading } = useQuery({
-    queryKey: ["users", page, searchTerm],
-    queryFn: () => adminApi.getUsers(page, searchTerm).then((res) => res.data),
-  });
+  const { data, isLoading: loading } = useUsers(page, searchTerm);
 
-  const users = data?.users || [];
-  const pagination: Pagination = (data?.pagination as Pagination) || {
+  const users = data?.data?.users || [];
+  const pagination: Pagination = (data?.data?.pagination as Pagination) || {
     current_page: 1,
     total_pages: 1,
     total_count: 0,
   };
 
-  const toggleRoleMutation = useMutation({
-    mutationFn: (userId: number) => adminApi.toggleUserRole(userId),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["users", page, searchTerm] }),
-    onError: (err) => console.error("Failed to toggle role:", err),
-  });
-
-  const deleteUserMutation = useMutation({
-    mutationFn: (userId: number) => adminApi.deleteUser(userId),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["users", page, searchTerm] }),
-    onError: (err) => console.error("Failed to delete user:", err),
-  });
+  const toggleRoleMutation = useToggleUserRole();
+  const deleteUserMutation = useDeleteUser();
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
