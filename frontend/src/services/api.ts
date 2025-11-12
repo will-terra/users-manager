@@ -29,7 +29,7 @@ async function handleResponse<T>(
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null);
     const message =
-      errorBody?.error?.details[0].message ||
+      errorBody?.error?.details?.[0]?.message ||
       errorBody?.message ||
       response.statusText ||
       "Request failed";
@@ -245,10 +245,31 @@ export const adminApi = {
     const params = new URLSearchParams();
     params.append("page", page.toString());
 
-    return request<{ data: { imports: unknown[]; pagination: Pagination } }>(
-      "GET",
-      `/admin/imports?${params.toString()}`,
-    );
+    // Backend returns a JSONAPI-serialized payload under `imports`, e.g.
+    // { imports: { data: [ { id, attributes: { ... } }, ... ] }, pagination: { ... } }
+    // Normalize it into an array of flat import objects that match ImportProgress
+    const response = await request<{
+      imports: {
+        data: Array<{ id: string; attributes: Record<string, unknown> }>;
+      };
+      pagination: Pagination;
+    }>("GET", `/admin/imports?${params.toString()}`);
+
+    const serialized = response.imports as
+      | { data: Array<{ id: string; attributes?: Record<string, unknown> }> }
+      | undefined;
+
+    const imports: unknown[] = Array.isArray(serialized?.data)
+      ? serialized.data.map((item) => {
+          const attrs = item.attributes ?? {};
+          return {
+            id: Number(item.id),
+            ...attrs,
+          } as unknown;
+        })
+      : [];
+
+    return { data: { imports, pagination: response.pagination } };
   },
 
   /**
@@ -258,7 +279,34 @@ export const adminApi = {
     const formData = new FormData();
     formData.append("import[file]", file);
 
-    return request<{ data: unknown }>("POST", "/admin/imports", formData);
+    // The create endpoint returns a JSONAPI-serialized single resource.
+    // Normalize to return a flat import object to the caller.
+    const response = await request<
+      | {
+          imports?: {
+            data: { id: string; attributes?: Record<string, unknown> };
+          };
+        }
+      | { data?: { id: string; attributes?: Record<string, unknown> } }
+    >("POST", "/admin/imports", formData);
+
+    // Support responses that return either { imports: { data: { ... } } }
+    // or { data: { ... } } depending on serialization
+    const respObj = response as Record<string, unknown>;
+    const maybeImports = respObj["imports"] as
+      | { data?: { id: string; attributes?: Record<string, unknown> } }
+      | undefined;
+    const maybeData = respObj["data"] as
+      | { id: string; attributes?: Record<string, unknown> }
+      | undefined;
+
+    const resource = maybeImports?.data ?? maybeData ?? null;
+
+    const created = resource
+      ? { id: Number(resource.id), ...(resource.attributes || {}) }
+      : null;
+
+    return { data: created };
   },
 };
 

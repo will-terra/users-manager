@@ -19,15 +19,13 @@ export const UsersPage: React.FC = () => {
   } = useQuery({
     queryKey: ["users", currentPage, search],
     queryFn: () =>
-      adminApi
-        .getUsers(currentPage, search)
-        .then(
-          (res) =>
-            res?.data ?? {
-              users: [],
-              pagination: { current_page: 1, total_pages: 1, total_count: 0 },
-            },
-        ),
+      adminApi.getUsers(currentPage, search).then(
+        (res) =>
+          res?.data ?? {
+            users: [],
+            pagination: { current_page: 1, total_pages: 1, total_count: 0 },
+          },
+      ),
   });
   useEffect(() => {
     if (isError) {
@@ -107,12 +105,10 @@ export const UsersPage: React.FC = () => {
       {globalError && <div className="error-message">{globalError}</div>}
 
       <div className="users-table">
-        {/* wrapper enables horizontal scrolling on small screens */}
         <div className="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>ID</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Role</th>
@@ -122,7 +118,6 @@ export const UsersPage: React.FC = () => {
             <tbody>
               {users.map((user) => (
                 <tr key={user.id}>
-                  <td>{user.id}</td>
                   <td>{user.full_name || user.email.split("@")[0]}</td>
                   <td>{user.email}</td>
                   <td>

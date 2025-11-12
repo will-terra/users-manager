@@ -1,3 +1,19 @@
+/**
+ * Hook: useAdminStats
+ * - Fetches administrative statistics from the API
+ * - Subscribes to real-time updates via ActionCable
+ *
+ * Inputs:
+ * - token: authentication token used to connect the websocket
+ *
+ * Returns an object with:
+ * - stats: the latest AdminStats or null while loading
+ * - loading: boolean flag while fetching
+ * - error: Error instance if the fetch failed
+ * - refreshStats: function to manually re-fetch stats
+ * - lastUpdated: Date of the most recent update (fetch or websocket)
+ */
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { adminApi } from "../services/api";
 import { cableService } from "../services/cable";
@@ -9,13 +25,19 @@ interface StatsUpdate {
 }
 
 export const useAdminStats = (token: string) => {
+  // current stats, null until loaded
   const [stats, setStats] = useState<AdminStats | null>(null);
+  // loading state for initial/explicit fetches
   const [loading, setLoading] = useState(true);
+  // store any fetch error
   const [error, setError] = useState<Error | null>(null);
+  // timestamp of the last successful update (either fetch or websocket)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
+  // track mount status to avoid state updates on unmounted component
   const isMountedRef = useRef(false);
 
+  // fetch latest stats from the REST API
   const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
@@ -41,12 +63,15 @@ export const useAdminStats = (token: string) => {
     }
   }, []);
 
+  // on mount: mark mounted, fetch, and subscribe to AdminStatsChannel
   useEffect(() => {
     isMountedRef.current = true;
     fetchStats();
 
+    // connect ActionCable consumer using provided token
     const consumer = cableService.connect(token);
     const subscription = consumer.subscriptions.create("AdminStatsChannel", {
+      // when data arrives over the websocket, update state
       received: (data: unknown) => {
         const typedData = data as StatsUpdate;
         if (typedData.type === "stats_update" && isMountedRef.current) {
@@ -54,15 +79,12 @@ export const useAdminStats = (token: string) => {
           setLastUpdated(new Date());
         }
       },
-      connected: () => {
-        console.log("Connected to AdminStatsChannel");
-      },
-      disconnected: () => {
-        console.log("Disconnected from AdminStatsChannel");
-      },
+      connected: () => { },
+      disconnected: () => { },
     });
 
     return () => {
+      // cleanup on unmount: prevent state updates and unsubscribe
       isMountedRef.current = false;
       try {
         subscription.unsubscribe();
