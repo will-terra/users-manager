@@ -1,19 +1,18 @@
-version: '3.9'
-
 services:
   backend:
     build: ./backend
-    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3001 -b '0.0.0.0'"
     volumes:
       - ./backend:/app
     ports:
-      - "3000:3000"
+      - "3001:3001"
     depends_on:
       - db
     environment:
       - DATABASE_URL=postgres://postgres:password@db:5432/myapp_development
-      - ACTION_CABLE_URL=ws://localhost:3000/cable
+      - ACTION_CABLE_URL=ws://localhost:3001/cable
       - FRONTEND_URL=http://localhost:5173
+      - RAILS_ENV=development
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/up"]
       interval: 30s
@@ -22,14 +21,19 @@ services:
 
   frontend:
     build: ./frontend
-    command: npm run dev
+    command: pnpm run dev --host 0.0.0.0
     volumes:
       - ./frontend:/app
       - /app/node_modules
     ports:
-      - "3001:5173"
+      - "5173:5173"
     depends_on:
       - backend
+    environment:
+      - VITE_API_URL=http://localhost:3001
+      # Optional development auth token: set this in your shell to auto-auth frontend
+      # Example: export VITE_DEV_AUTH_TOKEN=eyJhbGciOiJIUzI1NiJ9....
+      - VITE_DEV_AUTH_TOKEN=${VITE_DEV_AUTH_TOKEN:-}
 
   db:
     image: postgres:18
@@ -40,8 +44,20 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
 
+  # Separate background worker to run SolidQueue job processor
+  jobs:
+    build: ./backend
+    command: bash -lc "bundle exec ruby bin/jobs start"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://postgres:password@db:5432/myapp_development
+      - RAILS_ENV=development
+    restart: on-failure
 
 volumes:
   postgres_data:

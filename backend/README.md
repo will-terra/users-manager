@@ -1,24 +1,137 @@
-# README
+# Users Manager — Backend
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+This document explains how to run the Rails backend for the Users Manager app in development and inside Docker, how background jobs work, and where to find configuration and tests.
 
-Things you may want to cover:
+Contents
+- Quick overview
+- Prerequisites
+- Local setup (without Docker)
+- Run with Docker (recommended)
+- Background jobs
+- ActiveStorage / uploads
+- Tests and linters
+- Configuration & environment variables
+- Troubleshooting
 
-- Ruby version
+Quick overview
+----------------
 
-- System dependencies
+The backend is a Rails API application that provides JSON endpoints consumed by the React frontend. Key features:
 
-- Configuration
+- Authentication with Devise + devise-jwt (JWT issued at sign in/up and revoked on sign out).
+- Authorization with Pundit (admin vs user access control).
+- ActiveStorage for avatar uploads (local disk in development).
+- Background jobs for imports and image processing (see `bin/jobs`).
+- Realtime updates via ActionCable channels (admin stats, import progress).
 
-- Database creation
+Prerequisites
+-------------
 
-- Database initialization
+- Ruby 3.x (the project is compatible with the latest stable Ruby 3.x series used when it was developed)
+- Bundler
+- PostgreSQL (or the Docker Compose setup can provide Postgres)
+- Node & Yarn/PNPM are required only if you want to compile frontend assets from the backend app (this repo uses a separate frontend app)
 
-- How to run the test suite
+Local setup (without Docker)
+----------------------------
 
-- Services (job queues, cache servers, search engines, etc.)
+1. Install dependencies and setup the database:
 
-- Deployment instructions
+```bash
+cd backend
+bundle install
+bundle exec rails db:create db:migrate db:seed
+```
 
-- ...
+2. Start the Rails server (default port used by the repo is 3001):
+
+```bash
+bundle exec rails s -p 3001
+```
+
+3. Start background job worker(s) to process imports and avatar processing:
+
+```bash
+# the repository includes `bin/jobs` for running jobs (it uses the configured queue adapter)
+bin/jobs start
+```
+
+Run with Docker (recommended)
+-----------------------------
+
+This repository contains `docker-compose.yml` and Dockerfiles for both backend and frontend. The easiest way to run the full stack is using Docker Compose.
+
+1. Build and start containers:
+
+```bash
+docker-compose up --build
+```
+
+2. Create and migrate the database inside the running backend container (if not done automatically):
+
+```bash
+docker-compose run --rm backend bash -lc "bundle exec rails db:create db:migrate db:seed"
+```
+
+3. To run one-off commands inside the backend container (console, rails tasks):
+
+```bash
+docker-compose run --rm backend bash
+# then run `bundle exec rails c` or similar
+```
+
+Background jobs
+---------------
+
+- Background jobs are required to process imported spreadsheets, download remote files (spreadsheet or avatar images), and to process image variants.
+- Use the provided runner `bin/jobs` in development. When running via Docker, make sure the jobs service (configured in `docker-compose.yml`) is up.
+
+ActiveStorage / uploads
+-----------------------
+
+- Development uses local disk storage for ActiveStorage (see `config/storage.yml`). For production, configure an object store (S3 or similar) and set the appropriate ENV vars.
+- Uploaded avatars are attached to the user via `has_one_attached :avatar` and are processed by the `avatar_processing_job` after attach.
+
+Tests and linters
+-----------------
+
+Run the backend test suite (RSpec):
+
+```bash
+cd backend
+bundle exec rspec
+```
+
+RuboCop is available for style checks if configured in the repo. Run:
+
+```bash
+bundle exec rubocop
+```
+
+Configuration & environment variables
+-------------------------------------
+
+- `RAILS_ENV` — environment (development/test/production)
+- `DATABASE_URL` — connection string used by Rails in production/docker setups
+- `RAILS_MASTER_KEY` — master key for encrypted credentials (a `master.key` is included for local usage in this repo)
+- `ACTION_CABLE_URL` — URL used by the frontend to connect to ActionCable sockets (set via `docker-compose.yml` for containers)
+
+Check `config/environments/*.rb`, `config/credentials.yml.enc` and `config/storage.yml` for additional configuration points.
+
+Troubleshooting
+---------------
+
+- If the frontend cannot authenticate, confirm the frontend is sending the `Authorization: Bearer <token>` header returned by the sign in/up endpoints.
+- If imports do not start, ensure the job worker is running and has access to the storage where files are attached.
+- If ActiveStorage fails in Docker, check volume permissions and ensure the storage path exists and is writable.
+
+Useful endpoints
+----------------
+
+- POST `/api/v1/sign_up` — create an account (first user becomes admin)
+- POST `/api/v1/sign_in` — sign in (returns JWT and redirect path)
+- GET `/api/v1/users` — admin-only user listing
+- POST `/api/v1/user_imports` — upload or provide a remote URL to create a `UserImport`
+
+If you need additional details (CI configuration, alternative queue adapters, or S3 setup), I can add them or create a small setup script to automate local setup.
+
