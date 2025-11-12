@@ -188,7 +188,6 @@ export const adminApi = {
     const params = new URLSearchParams();
     params.append("page", page.toString());
     if (search) params.append("search", search);
-
     return request<{ data: { users: User[]; pagination: Pagination } }>(
       "GET",
       `/admin/users?${params.toString()}`,
