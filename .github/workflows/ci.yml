@@ -13,6 +13,15 @@ jobs:
     strategy:
       matrix:
         ruby-version: ["3.4.7"]
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: backend_test
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     
 
     steps:
@@ -61,6 +70,11 @@ jobs:
           bundle exec rspec --format documentation
         env:
           RAILS_ENV: test
+          # Use TCP connection to the postgres service started by the job
+          # Use the service hostname `postgres` (internal network) instead of binding
+          # the container port to the host. This avoids host port conflicts when
+          # GitHub Actions creates service containers.
+          DATABASE_URL: postgresql://postgres:password@postgres:5432/backend_test
 
       - name: Upload coverage artifact
         if: always()
