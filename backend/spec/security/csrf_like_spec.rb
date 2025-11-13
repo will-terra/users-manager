@@ -6,11 +6,11 @@ RSpec.describe 'CSRF / Authorization enforcement for state-changing endpoints', 
   let(:admin_token) { admin.generate_jwt }
 
   it 'rejects creating an admin resource without Authorization header' do
-    # Attempt to create a user (admin endpoint) without Authorization header
+  # Attempt to create a user (admin endpoint) without Authorization header
   post '/api/v1/admin/users', params: { user: { full_name: 'Bad', email: 'bad@example.com', role: 'user', password: 'password123', password_confirmation: 'password123' } }
 
     # The API should not allow state changes without a valid token
-    expect([401, 403]).to include(response.status)
+    expect([ 401, 403 ]).to include(response.status)
   end
 
   it 'rejects creating an admin resource with an invalid token' do
@@ -26,6 +26,6 @@ RSpec.describe 'CSRF / Authorization enforcement for state-changing endpoints', 
     }.to change { User.count }.by_at_least(1)
 
     # Creation should return HTTP 201 Created or 200 OK depending on implementation
-    expect([200, 201]).to include(response.status)
+    expect([ 200, 201 ]).to include(response.status)
   end
 end

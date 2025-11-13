@@ -1,7 +1,6 @@
 # Users Manager — Backend
 
-Important: create a `.env` file
--------------------------------
+## Important: create a `.env` file
 
 Before running the backend, create a `.env` file based on the provided example. Rename or copy `backend/.env.example` to `backend/.env` and update any values as needed (secrets, database URL, etc.). Example:
 
@@ -15,6 +14,7 @@ This repository also includes a `frontend/.env.example` — do the same for the 
 This document explains how to run the Rails backend for the Users Manager app in development and inside Docker, how background jobs work, and where to find configuration and tests.
 
 Contents
+
 - Quick overview
 - Prerequisites
 - Local setup (without Docker)
@@ -25,8 +25,9 @@ Contents
 - Configuration & environment variables
 - Troubleshooting
 
-Quick overview
-----------------
+## Quick overview
+
+---
 
 The backend is a Rails API application that provides JSON endpoints consumed by the React frontend. Key features:
 
@@ -36,16 +37,18 @@ The backend is a Rails API application that provides JSON endpoints consumed by 
 - Background jobs for imports and image processing (see `bin/jobs`).
 - Realtime updates via ActionCable channels (admin stats, import progress).
 
-Prerequisites
--------------
+## Prerequisites
+
+---
 
 - Ruby 3.x (the project is compatible with the latest stable Ruby 3.x series used when it was developed)
 - Bundler
 - PostgreSQL (or the Docker Compose setup can provide Postgres)
 - Node & Yarn/PNPM are required only if you want to compile frontend assets from the backend app (this repo uses a separate frontend app)
 
-Local setup (without Docker)
-----------------------------
+## Local setup (without Docker)
+
+---
 
 1. Install dependencies and setup the database:
 
@@ -68,20 +71,23 @@ bundle exec rails s -p 3001
 bin/jobs start
 ```
 
-Background jobs
----------------
+## Background jobs
+
+---
 
 - Background jobs are required to process imported spreadsheets, download remote files (spreadsheet or avatar images), and to process image variants.
 - Use the provided runner `bin/jobs` in development. When running via Docker, make sure the jobs service (configured in `docker-compose.yml`) is up.
 
-ActiveStorage / uploads
------------------------
+## ActiveStorage / uploads
+
+---
 
 - Development uses local disk storage for ActiveStorage (see `config/storage.yml`). For production, configure an object store (S3 or similar) and set the appropriate ENV vars.
 - Uploaded avatars are attached to the user via `has_one_attached :avatar` and are processed by the `avatar_processing_job` after attach.
 
-Tests and linters
------------------
+## Tests and linters
+
+---
 
 Run the backend test suite (RSpec):
 
@@ -96,28 +102,19 @@ RuboCop is available for style checks if configured in the repo. Run:
 bundle exec rubocop
 ```
 
-Configuration & environment variables
--------------------------------------
+## Troubleshooting
 
-- `RAILS_ENV` — environment (development/test/production)
-- `DATABASE_URL` — connection string used by Rails in production/docker setups
-- `RAILS_MASTER_KEY` — master key for encrypted credentials (a `master.key` is included for local usage in this repo)
-- `ACTION_CABLE_URL` — URL used by the frontend to connect to ActionCable sockets (set via `docker-compose.yml` for containers)
-
-Check `config/environments/*.rb`, `config/credentials.yml.enc` and `config/storage.yml` for additional configuration points.
-
-Troubleshooting
----------------
+---
 
 - If the frontend cannot authenticate, confirm the frontend is sending the `Authorization: Bearer <token>` header returned by the sign in/up endpoints.
 - If imports do not start, ensure the job worker is running and has access to the storage where files are attached.
 - If ActiveStorage fails in Docker, check volume permissions and ensure the storage path exists and is writable.
 
-Useful endpoints
-----------------
+## Useful endpoints
+
+---
 
 - POST `/api/v1/sign_up` — create an account (first user becomes admin)
 - POST `/api/v1/sign_in` — sign in (returns JWT and redirect path)
 - GET `/api/v1/users` — admin-only user listing
 - POST `/api/v1/user_imports` — upload or provide a remote URL to create a `UserImport`
-

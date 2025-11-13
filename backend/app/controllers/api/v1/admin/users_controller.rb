@@ -63,7 +63,7 @@ module Api
             return render json: { errors: [ "Password is required" ] }, status: :unprocessable_content
           end
 
-          # Build user from safe params 
+          # Build user from safe params
           user = User.new(admin_user_params)
 
           # If the request included an avatar payload, mark the model so
@@ -108,7 +108,7 @@ module Api
 
           # Note: role is intentionally not permitted via strong params here.
           # Use the dedicated `toggle_role` endpoint to change roles to reduce
-          # risk and satisfy 
+          # risk and satisfy
           if @user.update(admin_user_params)
             serialized = UserSerializer.new(@user).serializable_hash
             resource = serialized[:data] || {}
