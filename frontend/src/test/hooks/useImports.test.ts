@@ -123,8 +123,14 @@ describe("useImports", () => {
       throw new Error("localStorage error");
     });
 
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     // Should not throw during initialization
     expect(() => renderHook(() => useImports("token"))).not.toThrow();
+
+    consoleError.mockRestore();
   });
 
   test("saves dismissed IDs to localStorage", () => {
@@ -147,12 +153,18 @@ describe("useImports", () => {
 
     const { result } = renderHook(() => useImports("token"));
 
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     // Should not throw
     expect(() => {
       act(() => {
         result.current.dismissImport(1);
       });
     }).not.toThrow();
+
+    consoleError.mockRestore();
   });
 
   test("returns loading state from query", () => {
@@ -240,8 +252,14 @@ describe("useImports", () => {
       throw new Error("Connection failed");
     });
 
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     // Should not throw
     expect(() => renderHook(() => useImports("token"))).not.toThrow();
+
+    consoleError.mockRestore();
   });
 
   test("sets up specific import subscription when specificImportId provided", () => {

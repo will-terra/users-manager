@@ -2,8 +2,7 @@ name: Security scan
 
 on:
   push:
-    branches: [master, development]
-  pull_request: {}
+  pull_request: 
 
 jobs:
   security:

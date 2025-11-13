@@ -2,8 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master, development]
-  pull_request: {}
+  pull_request: 
 
 jobs:
   test:
@@ -84,11 +83,15 @@ jobs:
 
           
 
-      - name: Frontend install Node and pnpm
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
 
       - name: Ensure pnpm available
         run: |

@@ -197,9 +197,17 @@ describe("authService", () => {
     });
 
     test("returns null for malformed JWT", () => {
-      const result = authService.decodeToken("header.invalid-base64.signature");
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const result = authService.decodeToken(
+        "header.invalid-base64.signature",
+      );
 
       expect(result).toBeNull();
+
+      consoleError.mockRestore();
     });
   });
 
@@ -352,8 +360,14 @@ describe("authService", () => {
     const invalidToken = "header.!invalid-base64!.signature";
     localStorageMock.getItem.mockReturnValue(invalidToken);
 
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     const result = authService.getCurrentUser();
 
     expect(result).toBeNull();
+
+    consoleError.mockRestore();
   });
 });

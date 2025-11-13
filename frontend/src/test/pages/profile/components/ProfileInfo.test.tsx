@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 import type { User } from "../../../types/user";
-import { ProfileInfo } from "./ProfileInfo";
+import { ProfileInfo } from "../../../../pages/profile/components/ProfileInfo";
 
 // Mock user data
 const mockUser: User = {
