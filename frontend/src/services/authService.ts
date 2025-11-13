@@ -22,7 +22,7 @@ interface TokenStorage {
   clear(): void;
 }
 
-class LocalStorageTokenStorage implements TokenStorage {
+export class LocalStorageTokenStorage implements TokenStorage {
   private key = "authToken";
 
   get(): string | null {
@@ -38,7 +38,7 @@ class LocalStorageTokenStorage implements TokenStorage {
   }
 }
 
-class SessionStorageTokenStorage implements TokenStorage {
+export class SessionStorageTokenStorage implements TokenStorage {
   private key = "authToken";
 
   get(): string | null {
@@ -54,7 +54,7 @@ class SessionStorageTokenStorage implements TokenStorage {
   }
 }
 
-class MemoryTokenStorage implements TokenStorage {
+export class MemoryTokenStorage implements TokenStorage {
   private token: string | null = null;
 
   get(): string | null {
@@ -76,7 +76,7 @@ const tokenStorages: Record<StorageType, TokenStorage> = {
   memory: new MemoryTokenStorage(),
 };
 
-const tokenStorage = tokenStorages[STORAGE_TYPE];
+const tokenStorage = tokenStorages[STORAGE_TYPE] || tokenStorages.localStorage;
 
 // JWT utility functions
 function decodeJWT(token: string): JwtPayload | null {
