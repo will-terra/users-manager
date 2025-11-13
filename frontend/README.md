@@ -53,14 +53,8 @@ pnpm run build
 pnpm run preview
 ```
 
-Tests and linting
+Linting
 -----------------
-
-- Unit and integration tests live under `frontend/src/test` (if present). Run:
-
-```bash
-pnpm test
-```
 
 - ESLint is configured for TypeScript; run:
 
@@ -84,22 +78,8 @@ Notes on styling
 
 - SCSS is used for styling. The project follows a component-based SCSS structure co-located with components where practical.
 
-ESLint & TypeScript
---------------------
-
-This template supports expanding ESLint to be type-aware (see commented suggestions in the original template). For stricter type-checked rules, consider enabling `tseslint.configs.recommendedTypeChecked` and adding `tsconfig` paths in `eslint.config.js`.
-
 Troubleshooting
 ---------------
 
 - If the frontend fails to talk to the API, confirm `VITE_API_URL` points to the backend host and that CORS is configured on the backend to allow the frontend origin.
 - If ActionCable subscriptions fail, check the websocket endpoint and ensure the token is included and valid.
-
-Contributing
-------------
-
-- Follow the repository's branch strategy: create a feature branch off `development` for changes and open pull requests against `development`.
-- Add tests for new features and update or create relevant specs.
-
-If you want, I can add a small GitHub Actions workflow to run frontend lint and tests on pull requests.
-

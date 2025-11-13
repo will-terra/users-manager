@@ -68,30 +68,6 @@ bundle exec rails s -p 3001
 bin/jobs start
 ```
 
-Run with Docker (recommended)
------------------------------
-
-This repository contains `docker-compose.yml` and Dockerfiles for both backend and frontend. The easiest way to run the full stack is using Docker Compose.
-
-1. Build and start containers:
-
-```bash
-docker-compose up --build
-```
-
-2. Create and migrate the database inside the running backend container (if not done automatically):
-
-```bash
-docker-compose run --rm backend bash -lc "bundle exec rails db:create db:migrate db:seed"
-```
-
-3. To run one-off commands inside the backend container (console, rails tasks):
-
-```bash
-docker-compose run --rm backend bash
-# then run `bundle exec rails c` or similar
-```
-
 Background jobs
 ---------------
 
@@ -144,6 +120,4 @@ Useful endpoints
 - POST `/api/v1/sign_in` — sign in (returns JWT and redirect path)
 - GET `/api/v1/users` — admin-only user listing
 - POST `/api/v1/user_imports` — upload or provide a remote URL to create a `UserImport`
-
-If you need additional details (CI configuration, alternative queue adapters, or S3 setup), I can add them or create a small setup script to automate local setup.
 

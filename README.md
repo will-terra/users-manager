@@ -15,28 +15,9 @@ cd ../frontend
 cp .env.example .env
 ```
 
-- Check this readme.md
-- Create a branch to develop your task
-- Push to remote in 1 week (date will be checked from branch creation/assigned date)
-
-# Requirements:
-- Latest version of the stack
-- Write unit and integration tests 
-- Deliver with a working Dockerfile
-- Use docker-compose.yml if needed
-- Show your best practices ex: design patters, linters etc.
-
-# The Test
-Here we'll try to simulate a "real sprint" that you'll, probably, be assigned while working as Fullstack at Umanni.
-# The Task
-- Create a responsive application to manage users.
-- A user must have:
-1- full_name
-2- email
-3- avatar_image (upload from file or url)
 # Users Manager — Fullstack Developer Test
 
-This repository contains a Rails backend (API) and a React + TypeScript frontend. It implements a responsive user management application matching the test requirements (user CRUD, import CSV/XLSX with progress, realtime admin counters, avatar upload by file or URL, roles with admin/user, JWT authentication via Devise, etc.).
+This repository contains a Rails backend (API) and a React + TypeScript frontend. It implements a responsive user management application matching the test requirements: user CRUD, import CSV with progress, realtime admin counters, avatar upload by file or URL, roles with admin/user, JWT authentication via Devise...
 
 This README explains how the project maps to the requirements and provides step-by-step instructions to build, run and test the application (development and via Docker).
 
@@ -77,32 +58,29 @@ All of the requirements from the test are implemented or scaffolded in this proj
 
 ## Quickstart (recommended: Docker)
 
-1. Copy credentials and environment files if needed:
-
-   - A Rails `master.key` is included for local encrypted credentials in the repository. If you need to override credentials locally, set `RAILS_MASTER_KEY` or update `config/credentials.yml.enc` appropriately.
-
-2. Start the full stack with docker-compose (builds backend & frontend images):
+1. Start the full stack with docker-compose (builds backend & frontend images):
 
 ```bash
 docker-compose up --build
 ```
 
+
+2. Create and migrate the database (if required inside the backend container):
+
+```bash
+# From project root (using docker-compose's backend service)
+docker-compose run --rm backend bundle exec rails db:migrate 
+```
 3. Services exposed by default:
 
 - Backend API: http://localhost:3001
 - Frontend (Vite dev server): http://localhost:5173
 - PostgreSQL: 5432 (container)
 
-4. Create and migrate the database (if required inside the backend container):
 
-```bash
-# From project root (using docker-compose's backend service)
-docker-compose run --rm backend bundle exec rails db:migrate 
-```
+4. Visit the frontend and register a new user. Note: the first user created in the application is automatically assigned the `admin` role. Login will redirect to `/admin/dashboard` for admins and `/profile` for regular users.
 
-5. Visit the frontend and register a new user. Note: the first user created in the application is automatically assigned the `admin` role. Login will redirect to `/admin/dashboard` for admins and `/profile` for regular users.
-
-6. Sample CSV for import: a sample users file is included at `backend/public/users.csv`. You can import this file using the frontend Import page (Admin → Import) — either upload the file directly from your host or use the backend-served path when the backend is running (the file is available from the backend public folder).
+5. Sample CSV for import: a sample users file is included at `backend/public/users.csv`. You can import this file using the frontend Import page (Admin → Import) — either upload the file directly from your host or use the backend-served path when the backend is running (the file is available from the backend public folder).
 
 ## Frontend: dev and build
 
@@ -116,9 +94,6 @@ pnpm run dev
 pnpm run build
 ```
 
-Environment variables (frontend)
-- `VITE_API_URL` or `VITE_API_BASE_URL` — base URL for the API (default in docker-compose is http://localhost:3001)
-- Optional: `VITE_DEV_AUTH_TOKEN` used only for dev convenience
 
 ## Backend: run locally
 
@@ -148,14 +123,6 @@ cd backend
 bundle exec rspec
 ```
 
-Frontend tests (Jest / Testing Library in this repo):
-
-```bash
-cd frontend
-pnpm test
-```
-
-We aim for high coverage; test files and specs live under `backend/spec` and `frontend/src/test`.
 
 ## Important API endpoints (examples)
 
@@ -180,32 +147,12 @@ Note: The API is protected by JWT auth. The frontend stores the token and attach
 
 Frontend ActionCable consumer is implemented in `frontend/src/services/cable.ts`.
 
-## Configuration and secrets
-
-- Rails encrypted credentials are used for secrets (see `config/credentials.yml.enc` and `config/master.key`).
-- Environment variables used in `docker-compose.yml`: `DATABASE_URL`, `ACTION_CABLE_URL`, `FRONTEND_URL`, `RAILS_ENV`, `VITE_DEV_AUTH_TOKEN`.
-
 ## Linting, style and best practices
 
 - Frontend: ESLint + TypeScript rules are configured; SCSS is used for styling.
 - Backend: RuboCop, RSpec; services and background jobs follow single-responsibility patterns. Pundit is used for authorization.
 
-## Notes, assumptions and next steps
+## Notes
 
 - The first created user becomes an admin to seed administration access.
 - ActiveStorage uses local disk by default in development; for production configure S3 or other service in `config/storage.yml`.
-- If you want me to add CI (GitHub Actions) that runs lint and tests and reports coverage, I can add a minimal workflow.
-- If you need stress tests or a performance benchmark for imports, I can add a small harness that enqueues a large import and measures throughput.
-
-## Troubleshooting
-
-- If the frontend can't connect to ActionCable, ensure `VITE_API_URL` matches backend host and that `ACTION_CABLE_URL` (in `docker-compose`) is reachable.
-- If ActiveStorage file uploads fail inside Docker, ensure the `backend` container has correct write permissions to `/app/storage` and that volumes are mounted.
-
-## Contact / Contribution
-
-If you have questions or want me to add features (CI, more tests, docs), tell me which area to prioritize.
-
----
-
-This README was generated to document how to run and validate the Users Manager project and to map the implemented features to the original Fullstack Developer Test requirements.
