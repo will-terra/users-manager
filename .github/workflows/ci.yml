@@ -21,7 +21,7 @@ jobs:
           POSTGRES_PASSWORD: password
           POSTGRES_DB: backend_test
         options: >-
-          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+          --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 30
     
 
     steps:
@@ -41,6 +41,10 @@ jobs:
           bundle config path vendor/bundle
           bundle install --jobs 4 --retry 3
 
+      - name: Short wait for services
+        # Give services a small buffer time to finish initialization in flaky environments
+        run: sleep 10
+
 
       - name: Run RSpec
         working-directory: backend
@@ -53,8 +57,11 @@ jobs:
           export PGPASSWORD=password
           retries=0
           until pg_isready -h postgres -p 5432 -U postgres >/dev/null 2>&1; do
-            if [ "$retries" -ge 60 ]; then
+            if [ "$retries" -ge 120 ]; then
               echo "Postgres did not become ready after $retries attempts" >&2
+              # Output some diagnostics
+              echo "Running pg_isready output:" >&2
+              pg_isready -h postgres -p 5432 -U postgres || true
               exit 1
             fi
             retries=$((retries+1))
