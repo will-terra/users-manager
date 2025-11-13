@@ -99,12 +99,14 @@ jobs:
       - name: Install frontend deps
         working-directory: frontend
         run: |
-          curl -fsSL https://get.pnpm.io/install.sh | sh -
-          export PATH="$HOME/.local/share/pnpm:$PATH"
+          corepack enable
+          corepack prepare pnpm@latest --activate
           pnpm install --frozen-lockfile
 
       - name: Frontend lint and build
         working-directory: frontend
         run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
           pnpm run lint || echo "Frontend lint warnings (non-blocking)"
           pnpm run build
