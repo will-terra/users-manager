@@ -81,6 +81,7 @@ jobs:
         env:
           RAILS_ENV: test
           DATABASE_URL: postgresql://postgres:password@localhost:5432/backend_test
+          RAILS_MASTER_KEY: cd1eb5b64a73a80d8c00b046cbc55c8b
 
           
       - name: Upload coverage artifact
