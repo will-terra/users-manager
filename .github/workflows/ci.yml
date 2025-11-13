@@ -45,9 +45,21 @@ jobs:
       - name: Run RSpec
         working-directory: backend
         run: |
-          # Wait for Postgres TCP port to be open (pure-bash probe using /dev/tcp)
-          # This doesn't require the postgres client utilities to be installed.
-          until bash -c '</dev/tcp/postgres/5432' >/dev/null 2>&1; do sleep 1; done
+          # Ensure we have a reliable readiness check: install the postgres client
+          # and use pg_isready. This is more robust than a raw TCP probe and
+          # avoids long stuck waits. We'll timeout after ~2 minutes.
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client
+          export PGPASSWORD=password
+          retries=0
+          until pg_isready -h postgres -p 5432 -U postgres >/dev/null 2>&1; do
+            if [ "$retries" -ge 60 ]; then
+              echo "Postgres did not become ready after $retries attempts" >&2
+              exit 1
+            fi
+            retries=$((retries+1))
+            sleep 2
+          done
 
           # Prepare test database and run specs
           if bundle exec rails db:version >/dev/null 2>&1; then
@@ -56,7 +68,6 @@ jobs:
           bundle exec rspec --format documentation
         env:
           RAILS_ENV: test
-          # Use the service hostname provided by GitHub Actions services
           DATABASE_URL: postgresql://postgres:password@postgres:5432/backend_test
 
           

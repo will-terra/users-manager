@@ -19,8 +19,7 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          # Use a flexible Ruby version; change if your project requires a specific one
-          ruby-version: '3.x'
+          ruby-version: '3.4.7'
           bundler-cache: true
 
       - name: Setup Node.js and pnpm
