@@ -97,7 +97,7 @@ docker-compose up --build
 
 ```bash
 # From project root (using docker-compose's backend service)
-docker-compose run --rm backend bash -lc "bundle exec rails db:create db:migrate db:seed"
+docker-compose run --rm backend bundle exec rails db:migrate 
 ```
 
 5. Visit the frontend and register a new user. Note: the first user created in the application is automatically assigned the `admin` role. Login will redirect to `/admin/dashboard` for admins and `/profile` for regular users.

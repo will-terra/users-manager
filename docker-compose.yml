@@ -1,9 +1,7 @@
 services:
   backend:
     build: ./backend
-    # Use exec-array form to avoid passing the whole string to /bin/sh and
-    # potential shell parsing differences inside containers.
-    command: ["bash", "-lc", "rm -f tmp/pids/server.pid && bundle exec rails s -p 3001 -b '0.0.0.0'"]
+    command: ["./bin/rails", "server", "-p", "3001", "-b", "0.0.0.0"]
     volumes:
       - ./backend:/app
     ports:
@@ -16,7 +14,7 @@ services:
       - FRONTEND_URL=http://localhost:5173
       - RAILS_ENV=development
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/up"]
+      test: ["CMD", "curl", "-f", "http://localhost:3001/up"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -55,8 +53,9 @@ services:
   # Separate background worker to run SolidQueue job processor
   jobs:
     build: ./backend
-    # Use exec-array form to avoid invoking /bin/sh and reduce parsing surprises
-    command: ["bash", "-lc", "bundle exec ruby bin/jobs start"]
+    # Use exec-array form to avoid invoking /bin/sh and reduce parsing surprises.
+    # Run via bundle (no extra shell).
+    command: ["bundle", "exec", "ruby", "bin/jobs", "start"]
     volumes:
       - ./backend:/app
     depends_on:
