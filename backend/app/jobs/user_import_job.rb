@@ -61,19 +61,13 @@ class UserImportJob < ApplicationJob
     successful_imports = 0
     failed_imports = 0
     errors = []
-    generated_passwords = {}
 
     rows.each_slice(BATCH_SIZE).with_index do |batch, batch_index|
       batch.each_with_index do |row, index_in_batch|
         global_index = (batch_index * BATCH_SIZE) + index_in_batch
 
         begin
-          created_password = create_user_from_row(row)
-          # If a password was generated or provided for a new user, record it
-          if created_password.present?
-            # Use the email as key to look up later
-            generated_passwords[(row["email"] || row["Email"] || row["E-mail"]).to_s] = created_password
-          end
+          create_user_from_row(row)
           successful_imports += 1
         rescue => e
           failed_imports += 1
@@ -92,14 +86,10 @@ class UserImportJob < ApplicationJob
       progress: rows.size,
       error_message: errors.any? ? "Completed with #{failed_imports} errors. First few: #{errors.first(3).join('; ')}" : nil
     )
-    # Persist generated passwords map for admin visibility (if any)
-    if generated_passwords.any?
-      @user_import.update(generated_passwords: generated_passwords)
-    end
   end
 
   # Create or update a user from a single CSV/Excel row with validation
-  # Returns a password string if a password was generated/provided for a new user
+  # Sends welcome email with password immediately for new users (passwords are never stored)
   def create_user_from_row(row)
     user_attributes = {
       full_name: row["full_name"] || row["name"] || row["Full Name"] || row["Nome Completo"],
@@ -118,20 +108,24 @@ class UserImportJob < ApplicationJob
     user.full_name = user_attributes[:full_name]
     user.role = user_attributes[:role]
 
+    # Track if this is a new user to send welcome email
+    is_new_user = user.new_record?
+
     # Handle password: use CSV password if provided, or generate for new users
     csv_password = row["password"] || row["Password"]
-    password_to_return = nil
+    password_for_email = nil
+
     if csv_password.present?
       # Update password if explicitly provided in CSV
       user.password = csv_password
       user.password_confirmation = csv_password
-      password_to_return = csv_password if user.new_record? || user.persisted?
-    elsif user.new_record?
+      password_for_email = csv_password if is_new_user
+    elsif is_new_user
       # Generate password only for new users when not provided
       password = SecureRandom.hex(8)
       user.password = password
       user.password_confirmation = password
-      password_to_return = password
+      password_for_email = password
     end
 
     # Handle avatar URL if provided
@@ -140,7 +134,11 @@ class UserImportJob < ApplicationJob
     end
 
     user.save!
-    password_to_return
+
+    # Send welcome email immediately with password (never store the password)
+    if is_new_user && password_for_email.present?
+      UserMailer.welcome_email_with_password(user, password_for_email).deliver_later
+    end
   end
 
   # Broadcast initial import started event to subscribers

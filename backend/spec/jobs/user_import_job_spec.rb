@@ -105,20 +105,28 @@ RSpec.describe UserImportJob, type: :job do
     expect(existing_user.valid_password?('mypassword123')).to be true
   end
 
-  it 'stores generated passwords for new users on the UserImport record' do
-    # CSV with a new user without password -> should generate one
+  it 'sends welcome email with generated password for new users' do
+    # CSV with a new user without password -> should generate one and email it
     csv = "full_name,email\nGenerated User,gen@example.com\n"
     ui = create(:user_import)
     ui.file.detach
     ui.file.attach(io: StringIO.new(csv), filename: 'gen_pass.csv', content_type: 'text/csv')
     ui.save!
 
-    described_class.perform_now(ui.id)
+    # Expect welcome email to be enqueued
+    expect {
+      described_class.perform_now(ui.id)
+    }.to have_enqueued_job(ActionMailer::MailDeliveryJob).with(
+      'UserMailer',
+      'welcome_email_with_password',
+      'deliver_now',
+      hash_including(args: [ kind_of(User), kind_of(String) ])
+    )
 
     ui.reload
     expect(ui.status).to eq('completed')
-    expect(ui.generated_passwords).to be_present
-    expect(ui.generated_passwords['gen@example.com']).to be_present
+    # Password should NOT be stored
+    expect(ui).not_to respond_to(:generated_passwords)
   end
 end
 require 'rails_helper'
