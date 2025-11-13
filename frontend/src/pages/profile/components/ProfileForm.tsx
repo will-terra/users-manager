@@ -96,6 +96,63 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
         />
       </div>
 
+      <div className="form-group password-section">
+        <label>Change Password (Optional)</label>
+        <p className="form-text">
+          Leave blank if you don't want to change your password.
+        </p>
+
+        <div className="form-group">
+          <label htmlFor="current_password">Current Password</label>
+          <input
+            type="password"
+            id="current_password"
+            name="current_password"
+            value={formData.current_password}
+            onChange={onChange}
+            disabled={loading}
+            autoComplete="current-password"
+            aria-describedby="current-password-help"
+          />
+          <small id="current-password-help" className="form-text">
+            Required only if changing password.
+          </small>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="password">New Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={onChange}
+            minLength={6}
+            disabled={loading}
+            autoComplete="new-password"
+            aria-describedby="password-help"
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="password_confirmation">Confirm New Password</label>
+          <input
+            type="password"
+            id="password_confirmation"
+            name="password_confirmation"
+            value={formData.password_confirmation}
+            onChange={onChange}
+            minLength={6}
+            disabled={loading}
+            autoComplete="new-password"
+            aria-describedby="password-confirmation-help"
+          />
+          <small id="password-confirmation-help" className="form-text">
+            Must match new password.
+          </small>
+        </div>
+      </div>
+
       <div className="form-actions">
         <button
           type="submit"

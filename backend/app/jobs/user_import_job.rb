@@ -117,14 +117,18 @@ class UserImportJob < ApplicationJob
 
     if csv_password.present?
       # Update password if explicitly provided in CSV
-      user.password = csv_password
-      user.password_confirmation = csv_password
+      # Note: user.password= is provided by Devise and automatically hashes the password
+      # using bcrypt before storing. The plaintext password is never persisted to the database.
+      user.password = csv_password # lgtm[rb/clear-text-storage-sensitive-data]
+      user.password_confirmation = csv_password # lgtm[rb/clear-text-storage-sensitive-data]
       password_for_email = csv_password if is_new_user
     elsif is_new_user
       # Generate password only for new users when not provided
       password = SecureRandom.hex(8)
-      user.password = password
-      user.password_confirmation = password
+      # Note: user.password= is provided by Devise and automatically hashes the password
+      # using bcrypt before storing. The plaintext password is never persisted to the database.
+      user.password = password # lgtm[rb/clear-text-storage-sensitive-data]
+      user.password_confirmation = password # lgtm[rb/clear-text-storage-sensitive-data]
       password_for_email = password
     end
 

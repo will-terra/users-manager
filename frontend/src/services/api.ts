@@ -28,11 +28,30 @@ async function handleResponse<T>(
   // Handle other error statuses
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null);
-    const message =
-      errorBody?.error?.details?.[0]?.message ||
-      errorBody?.message ||
-      response.statusText ||
-      "Request failed";
+
+    // Extract error message from various possible formats
+    let message: string;
+    if (
+      errorBody?.errors &&
+      Array.isArray(errorBody.errors) &&
+      errorBody.errors.length > 0
+    ) {
+      // Handle array of error messages
+      message = errorBody.errors.join(", ");
+    } else if (
+      errorBody?.error?.details &&
+      Array.isArray(errorBody.error.details) &&
+      errorBody.error.details.length > 0
+    ) {
+      // Handle nested error details array
+      message = errorBody.error.details.join(", ");
+    } else if (errorBody?.error?.message) {
+      message = errorBody.error.message;
+    } else if (errorBody?.message) {
+      message = errorBody.message;
+    } else {
+      message = response.statusText || "Request failed";
+    }
 
     const err = new Error(message) as Error & {
       body?: unknown;

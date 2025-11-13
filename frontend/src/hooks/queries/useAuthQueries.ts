@@ -34,7 +34,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
     onSuccess: (data) => {
-      // Set the profile data in cache
+      // Set the profile data in cache (AuthContext reads from this)
       queryClient.setQueryData(authKeys.profile, { data: data.data.user });
       navigate("/profile");
     },
@@ -51,7 +51,7 @@ export function useRegister() {
   return useMutation({
     mutationFn: (userData: RegisterData) => authApi.register(userData),
     onSuccess: (data) => {
-      // Set the profile data in cache
+      // Set the profile data in cache (AuthContext reads from this)
       queryClient.setQueryData(authKeys.profile, { data: data.data.user });
       navigate("/profile");
     },

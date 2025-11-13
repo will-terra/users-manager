@@ -1,5 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext } from "react";
+import { authKeys } from "../hooks/queries/useAuthQueries";
 import { authApi } from "../services/api";
 import { authService } from "../services/authService";
 import type {
@@ -35,51 +37,29 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [token, setTokenState] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [globalError, setGlobalError] = useState<string | null>(null);
-  const [globalSuccess, setGlobalSuccess] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [token, setTokenState] = React.useState<string | null>(
+    authService.getToken(),
+  );
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [globalError, setGlobalError] = React.useState<string | null>(null);
+  const [globalSuccess, setGlobalSuccess] = React.useState<string | null>(null);
+
+  // Get current user from React Query cache as single source of truth
+  const profileData = queryClient.getQueryData<{ data: User }>(
+    authKeys.profile,
+  );
+  const currentUser = profileData?.data ?? null;
 
   const isAuthenticated = authService.isAuthenticated();
-
-  useEffect(() => {
-    // Initialize auth state on mount
-    const initAuth = () => {
-      const token = authService.getToken();
-      if (token && authService.isAuthenticated()) {
-        setTokenState(token);
-        // Try to get full user data from localStorage first, fallback to JWT reconstruction
-        const storedUser = localStorage.getItem("currentUser");
-        if (storedUser) {
-          try {
-            const user = JSON.parse(storedUser);
-            setCurrentUser(user);
-          } catch (error) {
-            console.error("Failed to parse stored user data:", error);
-            // Fallback to JWT reconstruction
-            const user = authService.getCurrentUser();
-            setCurrentUser(user);
-          }
-        } else {
-          // Fallback to JWT reconstruction
-          const user = authService.getCurrentUser();
-          setCurrentUser(user);
-        }
-      }
-      setIsLoading(false);
-    };
-
-    initAuth();
-  }, []);
 
   const login = async (
     credentials: LoginCredentials,
   ): Promise<AuthResponse> => {
     const response = await authApi.login(credentials);
     setTokenState(response.data.token);
-    setCurrentUser(response.data.user);
-    localStorage.setItem("currentUser", JSON.stringify(response.data.user));
+    // Set user in React Query cache
+    queryClient.setQueryData(authKeys.profile, { data: response.data.user });
     return response.data;
   };
 
@@ -88,8 +68,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await authApi.register(payload);
       setTokenState(response.data.token);
-      setCurrentUser(response.data.user);
-      localStorage.setItem("currentUser", JSON.stringify(response.data.user));
+      // Set user in React Query cache
+      queryClient.setQueryData(authKeys.profile, { data: response.data.user });
       return response.data;
     } finally {
       setIsLoading(false);
@@ -101,8 +81,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authApi.logout();
       setTokenState(null);
-      setCurrentUser(null);
-      localStorage.removeItem("currentUser");
+      // Clear React Query cache
+      queryClient.clear();
     } finally {
       setIsLoading(false);
     }
@@ -114,8 +94,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       const response = await authApi.getProfile();
-      setCurrentUser(response.data);
-      localStorage.setItem("currentUser", JSON.stringify(response.data));
+      // Update React Query cache
+      queryClient.setQueryData(authKeys.profile, { data: response.data });
     } finally {
       setIsLoading(false);
     }

@@ -7,6 +7,9 @@ export interface ProfileFormData {
   avatar: File | null;
   avatar_url: string;
   remove_avatar: boolean;
+  current_password: string;
+  password: string;
+  password_confirmation: string;
 }
 
 export interface UseProfileFormProps {
@@ -35,6 +38,9 @@ export interface ProfileUpdatePayload {
   avatar_url: string;
   remove_avatar: boolean;
   avatar?: File;
+  current_password?: string;
+  password?: string;
+  password_confirmation?: string;
 }
 
 export interface UseProfileFormReturn {

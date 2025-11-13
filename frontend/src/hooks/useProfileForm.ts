@@ -33,6 +33,9 @@ export const useProfileForm = ({
     avatar: null,
     avatar_url: "",
     remove_avatar: false,
+    current_password: "",
+    password: "",
+    password_confirmation: "",
   });
 
   const [formData, setFormData] =
@@ -114,6 +117,29 @@ export const useProfileForm = ({
         return;
       }
 
+      // Validate password fields if password is being changed
+      if (formData.password) {
+        if (!formData.current_password) {
+          setLocalError("Current password is required to change password");
+          return;
+        }
+
+        if (formData.password.length < 6) {
+          setLocalError("New password must be at least 6 characters");
+          return;
+        }
+
+        if (formData.password !== formData.password_confirmation) {
+          setLocalError("Password confirmation does not match");
+          return;
+        }
+
+        // Add password fields to update payload
+        updateData.current_password = formData.current_password;
+        updateData.password = formData.password;
+        updateData.password_confirmation = formData.password_confirmation;
+      }
+
       await updateProfileMutation.mutateAsync(updateData);
 
       // Reset form to clean state after successful update
@@ -123,6 +149,9 @@ export const useProfileForm = ({
         avatar: null,
         avatar_url: "",
         remove_avatar: false,
+        current_password: "",
+        password: "",
+        password_confirmation: "",
       });
 
       onSuccess?.();

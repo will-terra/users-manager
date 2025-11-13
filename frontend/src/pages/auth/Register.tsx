@@ -43,7 +43,11 @@ export const Register: React.FC = () => {
       const redirectTo = response.redirect_to || "/profile";
       navigate(redirectTo, { replace: true });
     } catch (err: unknown) {
-      setGlobalError(err instanceof Error ? err.message : String(err));
+      if (err instanceof Error) {
+        setGlobalError(err.message);
+      } else {
+        setGlobalError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

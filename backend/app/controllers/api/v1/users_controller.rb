@@ -69,7 +69,30 @@ module Api
           current_user.instance_variable_set(:@avatar_being_updated, true)
         end
 
-        if current_user.update(user_params)
+        # Handle password update validation
+        update_params = user_params
+        if update_params[:password].present?
+          # Require password confirmation first
+          unless update_params[:password_confirmation].present?
+            return render json: { errors: ["Password confirmation is required"] }, status: :unprocessable_entity
+          end
+
+          # Require current password for security
+          unless params.dig(:user, :current_password).present?
+            return render json: { errors: ["Current password is required to change password"] }, status: :unprocessable_entity
+          end
+
+          # Verify current password
+          unless current_user.valid_password?(params.dig(:user, :current_password))
+            return render json: { errors: ["Current password is incorrect"] }, status: :unprocessable_entity
+          end
+        else
+          # Remove password fields if password is blank (not updating password)
+          update_params.delete(:password)
+          update_params.delete(:password_confirmation)
+        end
+
+        if current_user.update(update_params)
           render json: { data: UserSerializer.new(current_user).serializable_hash[:data][:attributes] }
         else
           render_validation_errors(current_user)
@@ -110,8 +133,9 @@ module Api
       # mutable by API clients. `avatar` expects an uploaded file; `avatar_url`
       # can be used by clients to point to remote avatars if supported.
       # `remove_avatar` can be set to '1' to remove the user's avatar.
+      # Password fields are permitted for profile updates (current_password handled separately)
       def user_params
-        params.require(:user).permit(:full_name, :email, :avatar, :avatar_url, :remove_avatar)
+        params.require(:user).permit(:full_name, :email, :avatar, :avatar_url, :remove_avatar, :password, :password_confirmation)
       end
     end
   end

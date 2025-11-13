@@ -78,4 +78,94 @@ RSpec.describe 'Api::V1::Users', type: :request do
       expect(response).to have_http_status(:no_content)
     end
   end
+
+  describe 'PATCH /api/v1/users/profile' do
+    it 'updates current user profile' do
+      patch '/api/v1/users/profile',
+            headers: { 'Authorization' => token },
+            params: { user: { full_name: 'Updated Name' } }
+
+      expect(response).to have_http_status(:ok)
+      json_response = JSON.parse(response.body)
+      expect(json_response['data']['full_name']).to eq('Updated Name')
+    end
+
+    context 'password change' do
+      it 'changes password with valid current password' do
+        patch '/api/v1/users/profile',
+              headers: { 'Authorization' => token },
+              params: {
+                user: {
+                  current_password: 'password123',
+                  password: 'newpassword123',
+                  password_confirmation: 'newpassword123'
+                }
+              }
+
+        expect(response).to have_http_status(:ok)
+        
+        # Verify user can login with new password
+        user.reload
+        expect(user.valid_password?('newpassword123')).to be true
+      end
+
+      it 'rejects password change without current password' do
+        patch '/api/v1/users/profile',
+              headers: { 'Authorization' => token },
+              params: {
+                user: {
+                  password: 'newpassword123',
+                  password_confirmation: 'newpassword123'
+                }
+              }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        json_response = JSON.parse(response.body)
+        expect(json_response['errors']).to include('Current password is required to change password')
+      end
+
+      it 'rejects password change with incorrect current password' do
+        patch '/api/v1/users/profile',
+              headers: { 'Authorization' => token },
+              params: {
+                user: {
+                  current_password: 'wrongpassword',
+                  password: 'newpassword123',
+                  password_confirmation: 'newpassword123'
+                }
+              }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        json_response = JSON.parse(response.body)
+        expect(json_response['errors']).to include('Current password is incorrect')
+      end
+
+      it 'rejects password change without confirmation' do
+        patch '/api/v1/users/profile',
+              headers: { 'Authorization' => token },
+              params: {
+                user: {
+                  current_password: 'password123',
+                  password: 'newpassword123'
+                }
+              }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        json_response = JSON.parse(response.body)
+        expect(json_response['errors']).to include('Password confirmation is required')
+      end
+
+      it 'allows profile update without changing password' do
+        patch '/api/v1/users/profile',
+              headers: { 'Authorization' => token },
+              params: { user: { full_name: 'Updated Name' } }
+
+        expect(response).to have_http_status(:ok)
+        
+        # Verify password unchanged
+        user.reload
+        expect(user.valid_password?('password123')).to be true
+      end
+    end
+  end
 end

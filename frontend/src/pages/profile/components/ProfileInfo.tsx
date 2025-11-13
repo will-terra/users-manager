@@ -11,7 +11,7 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
     if (!dateString) return "N/A";
 
     try {
-      return new Date(dateString).toLocaleDateString(undefined, {
+      return new Date(dateString).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
