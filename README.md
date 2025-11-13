@@ -1,5 +1,20 @@
 # Fullstack Developer Test
 
+Important: create `.env` files
+------------------------------
+
+Before running the project, create `.env` files for both backend and frontend based on their examples. Copy or rename the provided `.env.example` files to `.env` and update any values (secrets, API URLs, etc.). Examples:
+
+```bash
+# backend
+cd backend
+cp .env.example .env
+
+# frontend
+cd ../frontend
+cp .env.example .env
+```
+
 - Check this readme.md
 - Create a branch to develop your task
 - Push to remote in 1 week (date will be checked from branch creation/assigned date)
@@ -85,7 +100,9 @@ docker-compose up --build
 docker-compose run --rm backend bash -lc "bundle exec rails db:create db:migrate db:seed"
 ```
 
-5. Visit the frontend and register a new user (first user will become admin). Login will redirect to `/admin/dashboard` for admins and `/profile` for regular users.
+5. Visit the frontend and register a new user. Note: the first user created in the application is automatically assigned the `admin` role. Login will redirect to `/admin/dashboard` for admins and `/profile` for regular users.
+
+6. Sample CSV for import: a sample users file is included at `backend/public/users.csv`. You can import this file using the frontend Import page (Admin → Import) — either upload the file directly from your host or use the backend-served path when the backend is running (the file is available from the backend public folder).
 
 ## Frontend: dev and build
 

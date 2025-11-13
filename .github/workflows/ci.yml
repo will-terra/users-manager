@@ -20,8 +20,10 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
           POSTGRES_DB: backend_test
+        ports:
+          - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 30
+          --health-cmd "pg_isready -U postgres -d backend_test" --health-interval 5s --health-timeout 5s --health-retries 20
     
 
     steps:
@@ -49,33 +51,36 @@ jobs:
       - name: Run RSpec
         working-directory: backend
         run: |
-          # Ensure we have a reliable readiness check: install the postgres client
-          # and use pg_isready. This is more robust than a raw TCP probe and
-          # avoids long stuck waits. We'll timeout after ~2 minutes.
+          # Wait for Postgres to be ready using localhost (mapped port)
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-client
           export PGPASSWORD=password
+          
+          echo "Waiting for Postgres to be ready..."
           retries=0
-          until pg_isready -h postgres -p 5432 -U postgres >/dev/null 2>&1; do
-            if [ "$retries" -ge 120 ]; then
-              echo "Postgres did not become ready after $retries attempts" >&2
-              # Output some diagnostics
-              echo "Running pg_isready output:" >&2
-              pg_isready -h postgres -p 5432 -U postgres || true
+          max_retries=20
+          until pg_isready -h localhost -p 5432 -U postgres -d backend_test >/dev/null 2>&1; do
+            if [ "$retries" -ge "$max_retries" ]; then
+              echo "ERROR: Postgres did not become ready after $max_retries attempts ($(($max_retries * 2)) seconds)" >&2
+              echo "Diagnostics:" >&2
+              echo "- pg_isready output:" >&2
+              pg_isready -h localhost -p 5432 -U postgres -d backend_test || true
+              echo "- Checking if port 5432 is listening:" >&2
+              netstat -tln | grep 5432 || true
               exit 1
             fi
             retries=$((retries+1))
             sleep 2
           done
+          echo "Postgres is ready after $retries attempts"
 
           # Prepare test database and run specs
-          if bundle exec rails db:version >/dev/null 2>&1; then
-            bundle exec rails db:create db:migrate RAILS_ENV=test || true
-          fi
+          bundle exec rails db:create RAILS_ENV=test || true
+          bundle exec rails db:migrate RAILS_ENV=test
           bundle exec rspec --format documentation
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgresql://postgres:password@postgres:5432/backend_test
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/backend_test
 
           
       - name: Upload coverage artifact

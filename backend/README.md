@@ -1,5 +1,17 @@
 # Users Manager — Backend
 
+Important: create a `.env` file
+-------------------------------
+
+Before running the backend, create a `.env` file based on the provided example. Rename or copy `backend/.env.example` to `backend/.env` and update any values as needed (secrets, database URL, etc.). Example:
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+This repository also includes a `frontend/.env.example` — do the same for the frontend when running it locally.
+
 This document explains how to run the Rails backend for the Users Manager app in development and inside Docker, how background jobs work, and where to find configuration and tests.
 
 Contents

@@ -1,5 +1,15 @@
 # Frontend — React + TypeScript + Vite
 
+Important: create a `frontend/.env` file
+---------------------------------------
+
+Before running the frontend, create a `.env` file based on the provided example. Rename or copy `frontend/.env.example` to `frontend/.env` and update any values as needed (API URL, ActionCable URL, dev tokens, etc.). Example:
+
+```bash
+cd frontend
+cp .env.example .env
+```
+
 This repo contains a Vite + React + TypeScript frontend used to manage users and interact with the Rails backend API. The app includes SCSS styles, client-side validation, and ActionCable integration for realtime updates (admin counters and import progress).
 
 Prerequisites
