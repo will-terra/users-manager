@@ -1,0 +1,4 @@
+# Force LF line endings for shell scripts and Ruby executables to prevent
+# "invalid option" errors when running in Linux containers on Windows hosts
+backend/bin/* text eol=lf
+*.sh text eol=lf
