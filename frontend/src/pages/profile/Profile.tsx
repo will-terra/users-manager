@@ -1,8 +1,8 @@
 import React from "react";
-import { NotificationBanner } from "../../components/NotificationBanner";
 import { useProfile, useUpdateProfile } from "../../hooks/queries";
 import { useAuth } from "../../hooks/useAuth";
 import { useProfileForm } from "../../hooks/useProfileForm";
+import { NotificationBanner } from "../../layout/NotificationBanner";
 import { ProfileAvatar } from "./components/ProfileAvatar";
 import { ProfileForm } from "./components/ProfileForm";
 import { ProfileInfo } from "./components/ProfileInfo";

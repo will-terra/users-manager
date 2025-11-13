@@ -1,9 +1,9 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { useProfileForm } from "../../hooks/useProfileForm";
 import type { ProfileUpdatePayload } from "../types/profile";
 import type { User } from "../types/user";
-import { useProfileForm } from "../../hooks/useProfileForm";
 
 // Mock React Query
 vi.mock("@tanstack/react-query");

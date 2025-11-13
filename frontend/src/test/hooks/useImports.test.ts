@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { cableService } from "../../services/cable";
 import { useImports } from "../../hooks/useImports";
+import { cableService } from "../../services/cable";
 
 // Mock dependencies
 vi.mock("@tanstack/react-query");
@@ -391,7 +391,6 @@ describe("useImports", () => {
   });
 
   test("queryFn is called when query executes", () => {
- 
     mockUseQuery.mockImplementation((config) => {
       // Execute the queryFn to ensure it's covered
       if (config.queryFn) {

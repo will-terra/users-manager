@@ -20,7 +20,6 @@ vi.mock("../../../services/api", () => ({
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
-import { adminApi } from "../../../services/api";
 import {
   useAdminStats,
   useCreateImport,
@@ -32,6 +31,7 @@ import {
   useUser,
   useUsers,
 } from "../../../hooks/queries/useAdminQueries";
+import { adminApi } from "../../../services/api";
 
 import { useNavigate } from "react-router-dom";
 

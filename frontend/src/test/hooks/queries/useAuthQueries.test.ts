@@ -17,7 +17,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { useNavigate } from "react-router-dom";
 import { describe, expect, test, vi } from "vitest";
-import { authApi } from "../../../services/api";
 import {
   useLogin,
   useLogout,
@@ -25,6 +24,7 @@ import {
   useRegister,
   useUpdateProfile,
 } from "../../../hooks/queries/useAuthQueries";
+import { authApi } from "../../../services/api";
 
 const mockUseQuery = vi.mocked(useQuery);
 const mockUseMutation = vi.mocked(useMutation);
