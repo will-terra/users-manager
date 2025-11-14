@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { adminApi } from "../../services/api";
 import type { User } from "../../types/user";
+import type { ImportProgress } from "../../types/api";
 
 export const adminKeys = {
   stats: ["admin", "stats"] as const,
@@ -160,9 +161,9 @@ export function useCreateImport() {
     onSuccess: (resp) => {
       // If the create endpoint returned the created import resource, prepend
       // it into the page 1 cache so users see it immediately.
-      const created = (resp as any)?.data ?? null;
+      const created = (resp as { data: ImportProgress | null }).data;
       if (created) {
-        queryClient.setQueryData(adminKeys.imports(1), (old: any) => {
+        queryClient.setQueryData(adminKeys.imports(1), (old: { data: { imports: ImportProgress[]; pagination: unknown } } | undefined) => {
           const prev = old?.data?.imports ?? [];
           const pagination = old?.data?.pagination ?? null;
           return {

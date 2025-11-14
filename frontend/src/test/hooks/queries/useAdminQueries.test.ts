@@ -17,9 +17,9 @@ vi.mock("../../../services/api", () => ({
   },
 }));
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi, afterEach, type Mock } from "vitest";
 import {
   useAdminStats,
   useCreateImport,
@@ -35,11 +35,35 @@ import { adminApi } from "../../../services/api";
 
 import { useNavigate } from "react-router-dom";
 
-const mockUseQuery = vi.mocked(useQuery);
-const mockUseMutation = vi.mocked(useMutation);
-const mockUseQueryClient = vi.mocked(useQueryClient);
-const mockUseNavigate = vi.mocked(useNavigate);
+const mockUseQuery = vi.mocked(useQuery) as Mock;
+const mockUseMutation = vi.mocked(useMutation) as Mock;
+const mockUseQueryClient = vi.mocked(useQueryClient) as Mock;
+const mockUseNavigate = vi.mocked(useNavigate) as Mock;
 const mockAdminApi = vi.mocked(adminApi);
+
+const createMockQueryResult = (data: unknown, isLoading = false) => ({
+  data,
+  isLoading,
+  isError: false,
+  error: null,
+  isPending: isLoading,
+  isLoadingError: false,
+  isRefetchError: false,
+  isSuccess: !isLoading,
+  status: isLoading ? 'pending' as const : 'success' as const,
+  dataUpdatedAt: 0,
+  errorUpdatedAt: 0,
+  failureCount: 0,
+  failureReason: null,
+  isFetched: true,
+  isFetchedAfterMount: true,
+  isFetching: false,
+  isRefetching: false,
+  isStale: false,
+  refetch: vi.fn(),
+  fetchStatus: 'idle' as const,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any as UseQueryResult<any, any>);
 
 describe("useAdminQueries", () => {
   const mockQueryClient = {
@@ -62,7 +86,7 @@ describe("useAdminQueries", () => {
 
   describe("useAdminStats", () => {
     test("calls useQuery with correct parameters", () => {
-      const mockResult = { data: { totalUsers: 100 }, isLoading: false };
+      const mockResult = createMockQueryResult({ totalUsers: 100 });
       mockUseQuery.mockReturnValue(mockResult);
 
       const { result } = renderHook(() => useAdminStats());
@@ -127,13 +151,13 @@ describe("useAdminQueries", () => {
 
     test("placeholderData returns previous data", () => {
       const previousData = { users: [{ id: 1, name: "John" }] };
-      let capturedPlaceholderFn: (data: unknown) => unknown;
+      let capturedPlaceholderFn: (data: unknown) => unknown = () => { };
 
       mockUseQuery.mockImplementation((config) => {
         capturedPlaceholderFn = config.placeholderData as (
           data: unknown,
         ) => unknown;
-        return { data: null, isLoading: true };
+        return createMockQueryResult(null, true);
       });
 
       renderHook(() => useUsers());
@@ -145,7 +169,7 @@ describe("useAdminQueries", () => {
 
   describe("useUser", () => {
     test("calls useQuery with correct parameters when id is provided", () => {
-      const mockResult = { data: { id: 1, name: "John" }, isLoading: false };
+      const mockResult = createMockQueryResult({ id: 1, name: "John" });
       mockUseQuery.mockReturnValue(mockResult);
 
       const { result } = renderHook(() => useUser(1));
@@ -467,13 +491,13 @@ describe("useAdminQueries", () => {
 
     test("placeholderData returns previous data", () => {
       const previousData = { imports: [{ id: 1, name: "Import 1" }] };
-      let capturedPlaceholderFn: (data: unknown) => unknown;
+      let capturedPlaceholderFn: (data: unknown) => unknown = () => { };
 
       mockUseQuery.mockImplementation((config) => {
         capturedPlaceholderFn = config.placeholderData as (
           data: unknown,
         ) => unknown;
-        return { data: null, isLoading: true };
+        return createMockQueryResult(null, true);
       });
 
       renderHook(() => useImports());

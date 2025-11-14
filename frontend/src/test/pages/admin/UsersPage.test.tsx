@@ -243,7 +243,7 @@ describe("UsersPage", () => {
     const toggleButtons = screen.getAllByText("Toggle Role");
     fireEvent.click(toggleButtons[0]);
 
-    const [id, options] = mockMutate.mock.calls[0];
+    const [, options] = mockMutate.mock.calls[0];
 
     // Call onError
     const error = new Error("Toggle failed");
@@ -297,7 +297,7 @@ describe("UsersPage", () => {
     const deleteButtons = screen.getAllByText("Delete");
     fireEvent.click(deleteButtons[0]);
 
-    const [id, options] = mockMutate.mock.calls[0];
+    const [, options] = mockMutate.mock.calls[0];
 
     // Call onError
     const error = new Error("Delete failed");

@@ -84,13 +84,13 @@ describe("ProfileInfo", () => {
     // Mock Date constructor to throw an error
     const originalDate = global.Date;
     global.Date = class extends originalDate {
-      constructor(...args: any[]) {
+      constructor(...args: unknown[]) {
         super(...args);
         if (args[0] === "throw-error") {
           throw new Error("Date construction failed");
         }
       }
-    } as any;
+    } as typeof Date;
 
     const userWithThrowingDate = {
       ...mockUser,

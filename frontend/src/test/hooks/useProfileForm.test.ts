@@ -1,9 +1,10 @@
+import React from "react";
 import type { UseMutationResult } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { useProfileForm } from "../../hooks/useProfileForm";
-import type { ProfileUpdatePayload } from "../types/profile";
-import type { User } from "../types/user";
+import type { ProfileUpdatePayload } from "../../types/profile";
+import type { User } from "../../types/user";
 
 // Mock React Query
 vi.mock("@tanstack/react-query");
@@ -237,7 +238,7 @@ describe("useProfileForm", () => {
     });
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(mockUpdateProfileMutation.mutateAsync).toHaveBeenCalledWith({
@@ -278,7 +279,7 @@ describe("useProfileForm", () => {
     });
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(mockUpdateProfileMutation.mutateAsync).toHaveBeenCalledWith({
@@ -306,7 +307,7 @@ describe("useProfileForm", () => {
     });
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(mockUpdateProfileMutation.mutateAsync).toHaveBeenCalledWith({
@@ -330,7 +331,7 @@ describe("useProfileForm", () => {
     });
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(result.current.localError).toBe("Full name is required");
@@ -347,7 +348,7 @@ describe("useProfileForm", () => {
     });
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(result.current.localError).toBe("Email is required");
@@ -365,7 +366,7 @@ describe("useProfileForm", () => {
     });
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(result.current.localError).toBe(
@@ -390,7 +391,7 @@ describe("useProfileForm", () => {
     });
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(result.current.localError).toBe(
@@ -415,7 +416,7 @@ describe("useProfileForm", () => {
     });
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(result.current.localError).toBe(
@@ -433,7 +434,7 @@ describe("useProfileForm", () => {
     const { result } = renderHook(() => useProfileForm(defaultProps));
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(result.current.localError).toBe(errorMessage);
@@ -446,7 +447,7 @@ describe("useProfileForm", () => {
     const { result } = renderHook(() => useProfileForm(defaultProps));
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(result.current.localError).toBe("String error");
@@ -464,7 +465,7 @@ describe("useProfileForm", () => {
     });
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(result.current.localError).toBe("Full name is required");
@@ -477,7 +478,7 @@ describe("useProfileForm", () => {
     });
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(result.current.localError).toBe(null);
@@ -579,7 +580,7 @@ describe("useProfileForm", () => {
     });
 
     await act(async () => {
-      await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
+      await result.current.handleSubmit({ preventDefault: vi.fn() } as React.FormEvent<Element>);
     });
 
     expect(mockUpdateProfileMutation.mutateAsync).toHaveBeenCalledWith({
