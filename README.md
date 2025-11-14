@@ -122,6 +122,15 @@ Backend tests (RSpec):
 cd backend
 bundle exec rspec
 ```
+<img width="642" height="222" alt="Captura de tela 2025-11-13 212329" src="https://github.com/user-attachments/assets/c3141e20-ff09-411e-9a2d-a6faea3a04f4" />
+
+
+Frontend tests (Vitest)
+```bash
+pnpm run test:coverage
+# coverage output will be placed in `frontend/coverage`
+```
+<img width="849" height="923" alt="Captura de tela 2025-11-13 212514" src="https://github.com/user-attachments/assets/ea937290-fbea-4eaf-91c4-a5e81e7f99f3" />
 
 
 ## Important API endpoints (examples)
