@@ -42,7 +42,7 @@ All of the requirements from the test are implemented or scaffolded in this proj
   - Node 20.x, pnpm
   - PostgreSQL database
 
-## Quickstart (recommended: Docker)
+## Quickstart (recommended: Docker on Linux or Windows Subsystem for Linux)
 
 Important: create `.env` files
 ------------------------------
