@@ -42,6 +42,17 @@ All of the requirements from the test are implemented or scaffolded in this proj
   - Node 20.x, pnpm
   - PostgreSQL database
 
+
+## Live Demo
+
+A live demo is available at: https://users-manager-frontend-rosy.vercel.app/
+
+Test Credentials:
+Email: teste@teste.com
+Password: 123456
+
+Note: This demo is hosted on free services. As a result, some functionalities may not operate as they would in the full Docker environment.
+
 ## Quickstart (recommended: Docker on Linux or Windows Subsystem for Linux)
 
 Important: create `.env` files
