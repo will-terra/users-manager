@@ -64,6 +64,34 @@ pnpm run preview
 pnpm run lint
 ```
 
+## Testing
+
+---
+
+- **Test runner:** The project uses Vitest for unit tests and test utilities.
+- **Prerequisites:** Ensure you have Node.js (20.x) and `pnpm` installed, and dependencies installed with `pnpm install`.
+- **Run tests (local):**
+
+```bash
+cd frontend
+pnpm run test
+```
+
+- **Run tests with coverage (local):**
+
+```bash
+pnpm run test:coverage
+# coverage output will be placed in `frontend/coverage`
+```
+
+- **Run tests in CI:** The CI runs Vitest in non-watch mode. To match CI behavior locally use:
+
+```bash
+pnpm run test:coverage -- --run
+```
+
+- **Troubleshooting:** If tests fail due to missing executables in a fresh environment, run `corepack enable` then `corepack prepare pnpm@latest --activate` (or install pnpm globally) before `pnpm install`.
+
 ## ActionCable (realtime) integration
 
 ---

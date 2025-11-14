@@ -164,21 +164,21 @@ describe("api", () => {
       });
 
       test("clears token even if backend logout fails", async () => {
-          fetchMock.mockResolvedValueOnce({
-            ok: false,
-            status: 500,
-            statusText: "Internal Server Error",
-          });
+        fetchMock.mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          statusText: "Internal Server Error",
+        });
 
-          const consoleError = vi
-            .spyOn(console, "error")
-            .mockImplementation(() => {});
+        const consoleError = vi
+          .spyOn(console, "error")
+          .mockImplementation(() => {});
 
-          await authApi.logout();
+        await authApi.logout();
 
-          expect(authService.clearToken).toHaveBeenCalled();
+        expect(authService.clearToken).toHaveBeenCalled();
 
-          consoleError.mockRestore();
+        consoleError.mockRestore();
       });
     });
 

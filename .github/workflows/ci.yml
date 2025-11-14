@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-  pull_request: 
+  pull_request:
 
 jobs:
   test:
@@ -22,7 +22,6 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd "pg_isready -U postgres -d backend_test" --health-interval 5s --health-timeout 5s --health-retries 20
-    
 
     steps:
       - name: Checkout
@@ -45,7 +44,6 @@ jobs:
         # Give services a small buffer time to finish initialization in flaky environments
         run: sleep 10
 
-
       - name: Run RSpec
         working-directory: backend
         run: |
@@ -53,7 +51,7 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-client
           export PGPASSWORD=password
-          
+
           echo "Waiting for Postgres to be ready..."
           retries=0
           max_retries=20
@@ -80,8 +78,6 @@ jobs:
           RAILS_ENV: test
           DATABASE_URL: postgresql://postgres:password@localhost:5432/backend_test
           RAILS_MASTER_KEY: cd1eb5b64a73a80d8c00b046cbc55c8b
-
-          
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -114,7 +110,6 @@ jobs:
           corepack enable
           corepack prepare pnpm@latest --activate
           pnpm run test:coverage -- --run
-
 
       - name: Combine backend and frontend coverage
         if: always()

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
-import type { User } from "../../../types/user";
 import { ProfileAvatar } from "../../../../pages/profile/components/ProfileAvatar";
+import type { User } from "../../../types/user";
 
 // Mock user data
 const mockUserWithAvatar: User = {

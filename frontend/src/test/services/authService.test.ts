@@ -201,9 +201,7 @@ describe("authService", () => {
         .spyOn(console, "error")
         .mockImplementation(() => {});
 
-      const result = authService.decodeToken(
-        "header.invalid-base64.signature",
-      );
+      const result = authService.decodeToken("header.invalid-base64.signature");
 
       expect(result).toBeNull();
 

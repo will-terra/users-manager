@@ -3,8 +3,8 @@ import { describe, expect, test, vi } from "vitest";
 import { useProfile, useUpdateProfile } from "../../../hooks/queries";
 import { useAuth } from "../../../hooks/useAuth";
 import { useProfileForm } from "../../../hooks/useProfileForm";
-import type { User } from "../../../types/user";
 import { Profile } from "../../../pages/profile/Profile";
+import type { User } from "../../../types/user";
 
 // Mock the hooks
 vi.mock("../../../hooks/queries");

@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
+import { ProfileForm } from "../../../../pages/profile/components/ProfileForm";
 import type { ProfileFormData } from "../../../types/profile";
 import type { User } from "../../../types/user";
-import { ProfileForm } from "../../../../pages/profile/components/ProfileForm";
 
 // Mock data
 const mockFormData: ProfileFormData = {
