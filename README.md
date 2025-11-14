@@ -1,19 +1,5 @@
 # Fullstack Developer Test
 
-Important: create `.env` files
-------------------------------
-
-Before running the project, create `.env` files for both backend and frontend based on their examples. Copy or rename the provided `.env.example` files to `.env` and update any values (secrets, API URLs, etc.). Examples:
-
-```bash
-# backend
-cd backend
-cp .env.example .env
-
-# frontend
-cd ../frontend
-cp .env.example .env
-```
 
 # Users Manager — Fullstack Developer Test
 
@@ -57,6 +43,22 @@ All of the requirements from the test are implemented or scaffolded in this proj
   - PostgreSQL database
 
 ## Quickstart (recommended: Docker)
+
+Important: create `.env` files
+------------------------------
+
+Before running the project, create `.env` files for both backend and frontend based on their examples. Copy or rename the provided `.env.example` files to `.env` and update any values (secrets, API URLs, etc.). Examples:
+
+```bash
+# backend
+cd backend
+cp .env.example .env
+
+# frontend
+cd ../frontend
+cp .env.example .env
+```
+
 
 1. Start the full stack with docker-compose (builds backend & frontend images):
 
