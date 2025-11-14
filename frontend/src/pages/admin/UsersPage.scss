@@ -158,6 +158,9 @@
 }
 
 .btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 0 !important;
   padding: 0.5rem 1rem;
   border: none;
@@ -213,8 +216,10 @@
   .users-header {
     flex-direction: column;
     margin-bottom: 1rem !important;
-    .btn {
-      margin-top: 0.5rem;
-    }
+ 
   }
+     .btn {
+      margin-top: 0.5rem;
+      max-width: fit-content;
+    }
 }

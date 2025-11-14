@@ -20,6 +20,7 @@ export const UserForm: React.FC<UserFormProps> = ({
     email: "",
     role: "user" as "user" | "admin",
     password: "",
+    password_confirmation: "",
   });
   const [avatar, setAvatar] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +38,7 @@ export const UserForm: React.FC<UserFormProps> = ({
         email: user.email,
         role: user.role as "user" | "admin",
         password: "",
+        password_confirmation: "",
       });
     }
   }, [user]);
@@ -130,18 +132,33 @@ export const UserForm: React.FC<UserFormProps> = ({
         </div>
 
         {!user && (
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              autoComplete={user ? "current-password" : "new-password"}
-              value={formData.password}
-              onChange={handleInputChange}
-              required={!user}
-            />
-          </div>
+          <>
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                autoComplete="new-password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password_confirmation">Confirm Password</label>
+              <input
+                type="password"
+                id="password_confirmation"
+                name="password_confirmation"
+                autoComplete="new-password"
+                value={formData.password_confirmation}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+          </>
         )}
 
         <div className="form-group">
@@ -155,6 +172,9 @@ export const UserForm: React.FC<UserFormProps> = ({
         </div>
 
         {error && <div className="error">{error}</div>}
+        {!user && formData.password_confirmation !== "" && formData.password !== formData.password_confirmation && (
+          <div className="error">Passwords do not match</div>
+        )}
 
         <div className="form-actions">
           <button
@@ -164,7 +184,11 @@ export const UserForm: React.FC<UserFormProps> = ({
           >
             Cancel
           </button>
-          <button type="submit" disabled={loading} className="btn btn-primary">
+          <button
+            type="submit"
+            disabled={loading || (!user && formData.password !== formData.password_confirmation)}
+            className="btn btn-primary"
+          >
             {loading ? "Saving..." : "Save"}
           </button>
         </div>

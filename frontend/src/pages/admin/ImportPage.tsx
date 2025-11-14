@@ -89,8 +89,8 @@ export const ImportPage: React.FC = () => {
         <div className="hint">
           <strong>Tip:</strong> CSV should contain columns like{" "}
           <code>
-            full_name,email,password,avatar_url (if you do not provide a
-            password it will be send by email)
+            full_name, email, password, role(admin or user), avatar_url(if you do not provide a
+            password it will be send by email.)
           </code>
           .
         </div>

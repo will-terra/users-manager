@@ -78,7 +78,6 @@ export const UsersPage: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <button type="submit">Search</button>
         </form>
       </div>
 
