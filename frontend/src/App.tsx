@@ -4,9 +4,9 @@ import {
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
-import { Layout } from "./components/layout/Layout";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { PublicRoute } from "./components/PublicRoute";
+import { Layout } from "./layout/Layout";
+import { ProtectedRoute } from "./layout/ProtectedRoute";
+import { PublicRoute } from "./layout/PublicRoute";
 import { AdminDashboard } from "./pages/admin/Dashboard";
 import { ImportPage } from "./pages/admin/ImportPage";
 import { UserEditPage } from "./pages/admin/UserEditPage";

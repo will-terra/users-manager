@@ -11,8 +11,9 @@ class CableService {
   private url: string;
 
   constructor() {
-    this.url =
-      import.meta.env.VITE_ACTION_CABLE_URL || "ws://localhost:3000/cable";
+    // Delay reading the environment variable until connect() so tests
+    // can stub `import.meta.env` before a connection is attempted.
+    this.url = "";
   }
 
   /**
@@ -30,8 +31,11 @@ class CableService {
     if (!authToken) {
       throw new Error("No token available for ActionCable connection");
     }
-
-    const connectUrl = `${this.url}?token=${encodeURIComponent(authToken)}`;
+    const baseUrl =
+      this.url ||
+      import.meta.env.VITE_ACTION_CABLE_URL ||
+      "ws://localhost:3000/cable";
+    const connectUrl = `${baseUrl}?token=${encodeURIComponent(authToken)}`;
     this.consumer = createConsumer(connectUrl);
 
     return this.consumer;

@@ -7,16 +7,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../services/api";
 import { cableService } from "../services/cable";
+import { adminKeys } from "./queries/useAdminQueries";
 import type { ImportProgress } from "../types/api";
 
 const DISMISSED_IDS_KEY = "dismissed_import_ids";
 
 interface ImportUpdate {
   type:
-    | "import_started"
-    | "progress_update"
-    | "import_completed"
-    | "import_created";
+  | "import_started"
+  | "progress_update"
+  | "import_completed"
+  | "import_created";
   data: ImportProgress & { channel?: string };
 }
 
@@ -77,7 +78,7 @@ export const useImports = (
     error: queryError,
     refetch,
   } = useQuery({
-    queryKey: ["admin", "imports", 1],
+    queryKey: adminKeys.imports(1),
     queryFn: () => adminApi.getImports(1),
     refetchInterval: 5000, // Auto-refetch every 5 seconds for real-time updates
     refetchIntervalInBackground: true,
@@ -119,7 +120,7 @@ export const useImports = (
       console.error(
         err instanceof Error ? err.message : "Failed to connect to websocket",
       );
-      return () => {};
+      return () => { };
     }
 
     let subscription;
@@ -136,9 +137,7 @@ export const useImports = (
               case "import_completed":
                 setCurrentImport(data.data);
                 // Invalidate query to refetch
-                queryClient.invalidateQueries({
-                  queryKey: ["admin", "imports"],
-                });
+                queryClient.invalidateQueries({ queryKey: adminKeys.imports(1) });
                 break;
             }
           },
@@ -153,11 +152,11 @@ export const useImports = (
             case "progress_update":
             case "import_completed":
               // Invalidate query to trigger refetch on any import update
-              queryClient.invalidateQueries({ queryKey: ["admin", "imports"] });
+              queryClient.invalidateQueries({ queryKey: adminKeys.imports(1) });
               break;
             case "imports_list_updated":
               // Invalidate query for list updates
-              queryClient.invalidateQueries({ queryKey: ["admin", "imports"] });
+              queryClient.invalidateQueries({ queryKey: adminKeys.imports(1) });
               break;
           }
         },

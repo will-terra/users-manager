@@ -37,6 +37,8 @@ export const ImportPage: React.FC = () => {
       await refreshImports();
       setGlobalSuccess("Import started successfully.");
       setFile(null);
+      // Reset the form to clear the file input
+      (e.target as HTMLFormElement).reset();
     } catch (err) {
       const errorObj = err as Error;
       setGlobalError(errorObj.message || "Import failed");
@@ -66,11 +68,11 @@ export const ImportPage: React.FC = () => {
             <input
               id="import_file"
               type="file"
-              accept=",.csv,text/csv"
+              accept=".csv,text/csv"
               onChange={handleFileChange}
               disabled={loading}
-              value=""
             />
+            {file && <p className="file-selected">{file.name}</p>}
           </div>
 
           <div className="form-actions">
@@ -86,7 +88,11 @@ export const ImportPage: React.FC = () => {
 
         <div className="hint">
           <strong>Tip:</strong> CSV should contain columns like{" "}
-          <code>full_name,email,password,avatar_url  (if you do not provide a password it will be send by email)</code>.
+          <code>
+            full_name,email,password,avatar_url (if you do not provide a
+            password it will be send by email)
+          </code>
+          .
         </div>
         <div style={{ marginTop: "1rem" }}>
           <ImportProgress

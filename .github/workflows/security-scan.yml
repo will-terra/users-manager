@@ -2,9 +2,7 @@ name: Security scan
 
 on:
   push:
-    branches: [master, development]
   pull_request:
-    branches: [master, development]
 
 jobs:
   security:
@@ -19,13 +17,13 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.4.7'
+          ruby-version: "3.4.7"
           bundler-cache: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Enable corepack (pnpm)
         run: |

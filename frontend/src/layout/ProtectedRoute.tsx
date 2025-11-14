@@ -11,9 +11,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   adminOnly = false,
 }) => {
-  const { currentUser, isLoading } = useAuth();
+  const { currentUser, isLoading, isInitializing } = useAuth();
 
-  if (isLoading) {
+  // Show loading while initializing or during operations
+  if (isLoading || isInitializing) {
     return <div className="loading-screen">Loading...</div>;
   }
 
