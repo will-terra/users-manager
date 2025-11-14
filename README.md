@@ -55,22 +55,6 @@ Note: This demo is hosted on free services. As a result, some functionalities ma
 
 ## Quickstart (recommended: Docker on Linux or Windows Subsystem for Linux)
 
-Important: create `.env` files
-------------------------------
-
-Before running the project, create `.env` files for both backend and frontend based on their examples. Copy or rename the provided `.env.example` files to `.env` and update any values (secrets, API URLs, etc.). Examples:
-
-```bash
-# backend
-cd backend
-cp .env.example .env
-
-# frontend
-cd ../frontend
-cp .env.example .env
-```
-
-
 1. Start the full stack with docker-compose (builds backend & frontend images):
 
 ```bash
@@ -94,6 +78,22 @@ docker-compose run --rm backend bundle exec rails db:migrate
 4. Visit the frontend and register a new user. Note: the first user created in the application is automatically assigned the `admin` role. Login will redirect to `/admin/dashboard` for admins and `/profile` for regular users.
 
 5. Sample CSV for import: a sample users file is included at `backend/public/users.csv`. You can import this file using the frontend Import page (Admin → Import) — either upload the file directly from your host or use the backend-served path when the backend is running (the file is available from the backend public folder).
+
+
+Important: create `.env` files
+------------------------------
+
+Before running the project, create `.env` files for both backend and frontend based on their examples. Copy or rename the provided `.env.example` files to `.env` and update any values (secrets, API URLs, etc.). Examples:
+
+```bash
+# backend
+cd backend
+cp .env.example .env
+
+# frontend
+cd ../frontend
+cp .env.example .env
+```
 
 ## Frontend: dev and build
 
