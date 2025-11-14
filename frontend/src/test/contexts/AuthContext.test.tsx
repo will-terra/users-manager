@@ -51,7 +51,7 @@ const TestComponent: React.FC = () => {
         onClick={() =>
           auth
             .login({ email: "test@example.com", password: "password" })
-            .catch(() => {})
+            .catch(() => { })
         }
       >
         Login
@@ -66,20 +66,20 @@ const TestComponent: React.FC = () => {
               password: "password",
               password_confirmation: "password",
             })
-            .catch(() => {})
+            .catch(() => { })
         }
       >
         Register
       </button>
       <button
         data-testid="logout-btn"
-        onClick={() => auth.logout().catch(() => {})}
+        onClick={() => auth.logout().catch(() => { })}
       >
         Logout
       </button>
       <button
         data-testid="refresh-btn"
-        onClick={() => auth.refreshUser().catch(() => {})}
+        onClick={() => auth.refreshUser().catch(() => { })}
       >
         Refresh
       </button>
@@ -126,6 +126,7 @@ describe("AuthContext", () => {
     // Default mocks
     authService.getToken.mockReturnValue(null);
     authService.isAuthenticated.mockReturnValue(false);
+    authApi.getProfile.mockResolvedValue({ data: null });
   });
 
   afterEach(() => {
@@ -148,6 +149,7 @@ describe("AuthContext", () => {
 
     test("initializes with token from authService", () => {
       authService.getToken.mockReturnValue("initial.token");
+      authApi.getProfile.mockResolvedValue({ data: { id: 1, email: "test@example.com" } });
 
       renderWithProviders(<TestComponent />);
 
@@ -198,7 +200,7 @@ describe("AuthContext", () => {
       // Suppress console.error for this test
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       fireEvent.click(screen.getByTestId("login-btn"));
 
@@ -269,7 +271,7 @@ describe("AuthContext", () => {
       // Suppress console.error for this test
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       fireEvent.click(screen.getByTestId("register-btn"));
 
@@ -288,6 +290,7 @@ describe("AuthContext", () => {
   describe("logout", () => {
     test("successfully logs out user", async () => {
       authService.getToken.mockReturnValue("existing.token");
+      authApi.getProfile.mockResolvedValue({ data: { id: 1, email: "test@example.com" } });
       authApi.logout.mockResolvedValue();
 
       renderWithProviders(<TestComponent />);
@@ -327,7 +330,7 @@ describe("AuthContext", () => {
       renderWithProviders(<TestComponent />);
 
       // Suppress console.warn for this test since logout logs warnings
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
 
       fireEvent.click(screen.getByTestId("logout-btn"));
 

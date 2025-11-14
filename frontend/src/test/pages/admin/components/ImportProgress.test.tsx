@@ -23,11 +23,11 @@ describe("ImportProgress", () => {
   const mockOnDismiss = vi.fn();
 
   test("returns null when there are no imports", () => {
-    const { container } = render(
+    render(
       <ImportProgress importProgress={new Map()} onDismiss={mockOnDismiss} />,
     );
 
-    expect(container.firstChild).toBeNull();
+    expect(screen.getByText("No import history yet. Start an import to see progress here.")).toBeInTheDocument();
   });
 
   test("renders container with sorted imports (newest first)", () => {

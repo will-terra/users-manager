@@ -157,9 +157,25 @@ export function useCreateImport() {
 
   return useMutation({
     mutationFn: (file: File) => adminApi.createImport(file),
-    onSuccess: () => {
-      // Invalidate imports list and stats
-      queryClient.invalidateQueries({ queryKey: ["admin", "imports"] });
+    onSuccess: (resp) => {
+      // If the create endpoint returned the created import resource, prepend
+      // it into the page 1 cache so users see it immediately.
+      const created = (resp as any)?.data ?? null;
+      if (created) {
+        queryClient.setQueryData(adminKeys.imports(1), (old: any) => {
+          const prev = old?.data?.imports ?? [];
+          const pagination = old?.data?.pagination ?? null;
+          return {
+            data: {
+              imports: [created, ...prev],
+              pagination,
+            },
+          };
+        });
+      }
+
+      // Invalidate imports list and stats to ensure fresh data from server
+      queryClient.invalidateQueries({ queryKey: adminKeys.imports(1) });
       queryClient.invalidateQueries({ queryKey: adminKeys.stats });
     },
   });

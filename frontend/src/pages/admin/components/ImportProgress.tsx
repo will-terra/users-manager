@@ -20,7 +20,11 @@ export const ImportProgress: React.FC<ImportProgressProps> = ({
   }, [importProgress]);
 
   if (sortedImports.length === 0) {
-    return null;
+    return (
+      <div className="import-progress-empty">
+        <p>No import history yet. Start an import to see progress here.</p>
+      </div>
+    );
   }
 
   return (

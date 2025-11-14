@@ -20,6 +20,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   isLoading: boolean;
+  isInitializing: boolean;
   // Global notifications (quick solution for persistent messages across remounts)
   globalError: string | null;
   globalSuccess: string | null;
@@ -44,6 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [globalError, setGlobalError] = React.useState<string | null>(null);
   const [globalSuccess, setGlobalSuccess] = React.useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = React.useState(true);
 
   // Get current user from React Query cache as single source of truth
   const profileData = queryClient.getQueryData<{ data: User }>(
@@ -52,6 +54,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const currentUser = profileData?.data ?? null;
 
   const isAuthenticated = authService.isAuthenticated();
+
+  // On mount, if token exists but user is not in cache, fetch profile
+  React.useEffect(() => {
+    if (token && !currentUser && !isLoading) {
+      setIsInitializing(true);
+      authApi
+        .getProfile()
+        .then((response) => {
+          queryClient.setQueryData(authKeys.profile, { data: response.data });
+        })
+        .catch((err) => {
+          console.error("Failed to fetch profile on mount:", err);
+          // If profile fetch fails, clear token (likely expired/invalid)
+          authService.clearToken();
+          setTokenState(null);
+        })
+        .finally(() => {
+          setIsInitializing(false);
+        });
+    } else if (!token || currentUser) {
+      // No token or user already loaded
+      setIsInitializing(false);
+    }
+  }, [token, currentUser, isLoading, queryClient]);
 
   const login = async (
     credentials: LoginCredentials,
@@ -123,6 +149,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     refreshUser,
     isLoading,
+    isInitializing,
     globalError,
     globalSuccess,
     setGlobalError: setGlobalErrorMsg,

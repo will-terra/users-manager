@@ -15,10 +15,10 @@ const mockCableService = vi.mocked(cableService);
 
 type ImportUpdate = {
   type:
-    | "import_started"
-    | "progress_update"
-    | "import_completed"
-    | "import_created";
+  | "import_started"
+  | "progress_update"
+  | "import_completed"
+  | "import_created";
   data: Record<string, unknown>;
 };
 
@@ -90,7 +90,7 @@ describe("useImports", () => {
 
     // Reset localStorage mocks
     localStorageMock.getItem.mockReturnValue(null); // No dismissed IDs initially
-    localStorageMock.setItem.mockImplementation(() => {}); // No-op by default
+    localStorageMock.setItem.mockImplementation(() => { }); // No-op by default
   });
 
   afterEach(() => {
@@ -125,7 +125,7 @@ describe("useImports", () => {
 
     const consoleError = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     // Should not throw during initialization
     expect(() => renderHook(() => useImports("token"))).not.toThrow();
@@ -155,7 +155,7 @@ describe("useImports", () => {
 
     const consoleError = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     // Should not throw
     expect(() => {
@@ -254,7 +254,7 @@ describe("useImports", () => {
 
     const consoleError = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     // Should not throw
     expect(() => renderHook(() => useImports("token"))).not.toThrow();
@@ -310,7 +310,7 @@ describe("useImports", () => {
 
     expect(result.current.currentImport).toEqual(updateData);
     expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
-      queryKey: ["admin", "imports"],
+      queryKey: ["admin", "imports", { page: 1 }],
     });
   });
 
@@ -341,7 +341,7 @@ describe("useImports", () => {
     });
 
     expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
-      queryKey: ["admin", "imports"],
+      queryKey: ["admin", "imports", { page: 1 }],
     });
   });
 
@@ -404,7 +404,7 @@ describe("useImports", () => {
     });
 
     expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
-      queryKey: ["admin", "imports"],
+      queryKey: ["admin", "imports", { page: 1 }],
     });
   });
 

@@ -523,7 +523,7 @@ describe("useAdminQueries", () => {
       mutationConfig.onSuccess();
 
       expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
-        queryKey: ["admin", "imports"],
+        queryKey: ["admin", "imports", { page: 1 }],
       });
       expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
         queryKey: ["admin", "stats"],

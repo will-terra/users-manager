@@ -37,6 +37,8 @@ export const ImportPage: React.FC = () => {
       await refreshImports();
       setGlobalSuccess("Import started successfully.");
       setFile(null);
+      // Reset the form to clear the file input
+      (e.target as HTMLFormElement).reset();
     } catch (err) {
       const errorObj = err as Error;
       setGlobalError(errorObj.message || "Import failed");
@@ -66,11 +68,11 @@ export const ImportPage: React.FC = () => {
             <input
               id="import_file"
               type="file"
-              accept=",.csv,text/csv"
+              accept=".csv,text/csv"
               onChange={handleFileChange}
               disabled={loading}
-              value=""
             />
+            {file && <p className="file-selected">{file.name}</p>}
           </div>
 
           <div className="form-actions">

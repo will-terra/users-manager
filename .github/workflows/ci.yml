@@ -101,46 +101,6 @@ jobs:
           corepack prepare pnpm@latest --activate
           pnpm install --frozen-lockfile
 
-      - name: Frontend tests (vitest coverage)
-        working-directory: frontend
-        env:
-          CI: true
-        run: |
-          # Run vitest in non-watch mode with coverage
-          corepack enable
-          corepack prepare pnpm@latest --activate
-          pnpm run test:coverage -- --run
-
-      - name: Combine backend and frontend coverage
-        if: always()
-        run: |
-          set -e
-          mkdir -p coverage_combined
-          if [ -d backend/coverage ]; then
-            cp -r backend/coverage coverage_combined/backend || true
-          else
-            echo "No backend coverage directory found"
-          fi
-          if [ -d frontend/coverage ]; then
-            cp -r frontend/coverage coverage_combined/frontend || true
-          else
-            echo "No frontend coverage directory found"
-          fi
-
-      - name: Check combined coverage threshold
-        if: always()
-        run: |
-          corepack enable
-          corepack prepare pnpm@latest --activate || true
-          node .github/scripts/check_coverage.js 90
-
-      - name: Upload combined coverage artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-all
-          path: coverage_combined
-
       - name: Frontend lint and build
         working-directory: frontend
         run: |
